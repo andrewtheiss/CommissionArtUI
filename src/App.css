@@ -288,12 +288,17 @@ h2 {
   width: 100%;
   font-size: 1rem;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 20px;
   transition: background-color 0.2s;
 }
 
 .update-button:hover {
   background-color: #4338ca;
+}
+
+.update-button:disabled {
+  background-color: #4f46e580;
+  cursor: not-allowed;
 }
 
 .back-link {
@@ -306,4 +311,104 @@ h2 {
 .back-link:hover {
   color: #9ca3af;
   text-decoration: underline;
+}
+
+/* Gas Estimation Styles */
+.estimate-button {
+  background-color: #4a6df7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.estimate-button:hover {
+  background-color: #3a5de7;
+}
+
+.estimate-button:disabled {
+  background-color: #4a6df780;
+  cursor: not-allowed;
+}
+
+.gas-estimates {
+  background-color: #22222a;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid #333;
+}
+
+.gas-estimates h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #ffffffcc;
+}
+
+.estimate-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+.estimate-item:last-child {
+  border-bottom: none;
+}
+
+.network-name {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ffffffde;
+}
+
+.estimate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #ffffffcc;
+}
+
+.estimate-details span {
+  font-family: monospace;
+  color: #4a6df7;
+}
+
+.loading-spinner {
+  color: #ffc107;
+  font-style: italic;
+}
+
+.error-message {
+  color: #e57373;
+  font-size: 0.9rem;
+}
+
+.total-cost {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+  font-weight: 500;
+}
+
+.total-cost span {
+  font-weight: 600;
+  font-family: monospace;
+  color: #4a6df7;
+}
+
+.cost-threshold-ok {
+  color: #4caf50;
+  margin-top: 8px;
+}
+
+.cost-threshold-exceed {
+  color: #f44336;
+  margin-top: 8px;
 }
