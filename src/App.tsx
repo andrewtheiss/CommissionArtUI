@@ -3,10 +3,12 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home'
 import UpdateNFTOwnership from './pages/UpdateNFTOwnership'
+import WelcomeWidget from './components/WelcomeWidget'
 
 function App() {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   // Effect to simulate connection
   useEffect(() => {
@@ -30,12 +32,14 @@ function App() {
           <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
         </div>
         
-        <h1>AnimeChain Commission Art</h1>
+        <h1>Latest Commissions</h1>
         
         <Routes>
           <Route path="/" element={<Home loading={loading} connected={connected} />} />
           <Route path="/update-nft" element={<UpdateNFTOwnership />} />
         </Routes>
+        
+        <WelcomeWidget visible={showWelcome} onClose={() => setShowWelcome(false)} />
       </div>
     </BrowserRouter>
   )
