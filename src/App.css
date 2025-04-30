@@ -1,0 +1,414 @@
+#root {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #ffffffde;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 500;
+  color: #ffffffde;
+  margin: 0 auto;
+  padding-bottom: 15px;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: #ffffffcc;
+}
+
+.blockchain-status {
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  border-left: 4px solid #4a90e2;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 500px;
+}
+
+.blockchain-status.loading {
+  background-color: #2d2a1e;
+  border-left-color: #ffc107;
+}
+
+.blockchain-status p {
+  margin: 0;
+  font-size: 14px;
+  color: #ffffffcc;
+  display: flex;
+  align-items: center;
+}
+
+.blockchain-status .network-name {
+  font-weight: 500;
+  margin: 0 4px;
+  color: #ffffffde;
+}
+
+.blockchain-status .environment {
+  background-color: #1a3a4a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-left: 6px;
+  color: #4a90e2;
+}
+
+.blockchain-status .disconnected {
+  color: #e74c3c;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  position: relative;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.image-outline {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #646cff;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.image-outline:after {
+  content: "?";
+  font-size: 3rem;
+  color: #646cff40;
+}
+
+.contract-address {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #ffffffaa;
+  background-color: #2a2a2a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.contract-address.placeholder {
+  background-color: #2a2a2a;
+  height: 16px;
+  width: 120px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(26, 26, 26, 0.8);
+  border-radius: 8px;
+  z-index: 10;
+  gap: 1rem;
+}
+
+.loading-overlay p {
+  font-size: 16px;
+  color: #ffffffaa;
+  margin: 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(100, 108, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #646cff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.network-info {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item .label {
+  font-weight: 500;
+  color: #ffffffcc;
+}
+
+.info-item .value {
+  font-family: monospace;
+  color: #646cff;
+  word-break: break-all;
+}
+
+/* Header Styles */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.update-nft-button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.update-nft-button:hover {
+  background-color: #4338ca;
+}
+
+/* Update NFT Page Styles */
+.update-nft-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px;
+  min-height: 80vh;
+}
+
+.update-nft-container {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 30px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.update-nft-container h1 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.form-container {
+  margin-top: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: white;
+  font-size: 1rem;
+}
+
+.update-button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+}
+
+.update-button:hover {
+  background-color: #4338ca;
+}
+
+.update-button:disabled {
+  background-color: #4f46e580;
+  cursor: not-allowed;
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 20px;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: #9ca3af;
+  text-decoration: underline;
+}
+
+/* Gas Estimation Styles */
+.estimate-button {
+  background-color: #4a6df7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.estimate-button:hover {
+  background-color: #3a5de7;
+}
+
+.estimate-button:disabled {
+  background-color: #4a6df780;
+  cursor: not-allowed;
+}
+
+.gas-estimates {
+  background-color: #22222a;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid #333;
+}
+
+.gas-estimates h3 {
+  font-size: 1.2rem;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #ffffffcc;
+}
+
+.estimate-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+.estimate-item:last-child {
+  border-bottom: none;
+}
+
+.network-name {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ffffffde;
+}
+
+.estimate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #ffffffcc;
+}
+
+.estimate-details span {
+  font-family: monospace;
+  color: #4a6df7;
+}
+
+.loading-spinner {
+  color: #ffc107;
+  font-style: italic;
+}
+
+.error-message {
+  color: #e57373;
+  font-size: 0.9rem;
+}
+
+.total-cost {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #444;
+  font-weight: 500;
+}
+
+.total-cost span {
+  font-weight: 600;
+  font-family: monospace;
+  color: #4a6df7;
+}
+
+.cost-threshold-ok {
+  color: #4caf50;
+  margin-top: 8px;
+}
+
+.cost-threshold-exceed {
+  color: #f44336;
+  margin-top: 8px;
+}
