@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import config, { NetworkConfig } from './config';
 
-type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet';
+type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
 
 class EthersService {
   private provider: ethers.BrowserProvider | ethers.JsonRpcProvider | null = null;

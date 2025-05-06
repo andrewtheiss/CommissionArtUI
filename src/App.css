@@ -6,11 +6,20 @@
 .app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  max-width: 1200px;
+  min-height: 100vh;
   margin: 0 auto;
   color: #ffffffde;
+  padding: 2rem 2rem 0 2rem;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.app-main-content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h1 {
@@ -27,6 +36,7 @@ h1 {
   flex-direction: column;
   gap: 2rem;
   width: 100%;
+  position: relative;
 }
 
 h2 {
@@ -301,16 +311,25 @@ h2 {
   cursor: not-allowed;
 }
 
+/* Update the back-link to match button height and alignment */
 .back-link {
-  display: inline-block;
-  margin-top: 20px;
-  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #ffffffaa;
   text-decoration: none;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: background-color 0.2s, color 0.2s;
+  margin-right: 10px; /* Add space between buttons */
+  margin-top: 20px; /* Consistent margin across all primary action buttons */
 }
 
 .back-link:hover {
-  color: #9ca3af;
-  text-decoration: underline;
+  background-color: #333;
+  color: #fff;
+  text-decoration: none;
 }
 
 /* Gas Estimation Styles */
@@ -325,6 +344,7 @@ h2 {
   cursor: pointer;
   margin-bottom: 20px;
   transition: background-color 0.2s;
+  margin-top: 20px; /* Consistent margin across all primary action buttons */
 }
 
 .estimate-button:hover {
@@ -411,4 +431,433 @@ h2 {
 .cost-threshold-exceed {
   color: #f44336;
   margin-top: 8px;
+}
+
+/* Update the render counter styling */
+.render-counter {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 100;
+  font-family: monospace;
+  max-width: 250px;
+  transition: all 0.3s ease;
+}
+
+.render-counter:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.render-details {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Minimal styling for the network toggle button */
+.network-toggle {
+  margin-left: 12px;
+  background: none;
+  border: 1px solid #4a90e2;
+  border-radius: 12px;
+  padding: 2px 12px;
+  color: #4a90e2;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s, color 0.2s;
+  opacity: 1;
+}
+
+.network-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.network-toggle:hover:not(:disabled) {
+  background: #4a90e2;
+  color: #fff;
+}
+
+/* Header links styling */
+.header-links {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.header-link {
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background-color: #535bf2;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.header-link:hover {
+  background-color: #4349c0;
+}
+
+/* Add Art Page Styles */
+.add-art-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.add-art-container {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.add-art-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.add-art-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.art-image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.art-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dropzone {
+  border: 2px dashed #535bf2;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(83, 91, 242, 0.05);
+}
+
+.dropzone:hover, .dropzone.active {
+  border-color: #646cff;
+  background-color: rgba(83, 91, 242, 0.1);
+}
+
+.dropzone p {
+  margin: 10px 0;
+  color: #ffffffaa;
+}
+
+.dropzone .icon {
+  font-size: 40px;
+  color: #535bf2;
+  margin-bottom: 10px;
+}
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.compression-info {
+  background-color: #222;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.compression-info p {
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.compression-info .label {
+  color: #ffffffaa;
+}
+
+.compression-info .value {
+  font-family: monospace;
+  color: #646cff;
+}
+
+.compression-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  font-size: 14px;
+}
+
+.compression-status.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 3px solid #4caf50;
+}
+
+.compression-status.warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left: 3px solid #ffc107;
+}
+
+.compression-status.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left: 3px solid #f44336;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffffde;
+}
+
+.form-group input, .form-group textarea {
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  color: #fff;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+  border-color: #535bf2;
+  outline: none;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.submit-button {
+  background-color: #535bf2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #4349c0;
+}
+
+.submit-button:disabled {
+  background-color: #535bf280;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(83, 91, 242, 0.3);
+  border-radius: 50%;
+  border-top-color: #535bf2;
+  animation: spin 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* Update form-actions to add spacing between buttons and ensure alignment */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; /* Ensure vertical alignment */
+  margin-top: 30px;
+  gap: 15px; /* Add consistent gap between elements */
+}
+
+@media (max-width: 768px) {
+  .add-art-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Updated Network Radio Button Styles to match main button styling */
+.network-radio-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 0;
+  border: none;
+  outline: none;
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  
+  /* Default style: Match main app buttons */
+  background-color: #535bf2;
+  color: #fff;
+  position: relative;
+}
+
+.network-radio-btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2); /* Light separator */
+}
+
+.network-radio-btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.network-radio-btn.selected {
+  background-color: #4349c0; /* Darker shade for selected */
+  color: #fff;
+  font-weight: 600;
+  z-index: 1;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(1px);
+}
+
+.network-radio-btn:not(.selected):hover:not(:disabled) {
+  background-color: #4349c0; /* Same hover behavior as main buttons */
+}
+
+.network-radio-btn.selected:hover:not(:disabled) {
+  background-color: #383d9e; /* Even darker for selected hover */
+}
+
+.network-radio-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #535bf280; /* Semi-transparent version */
+}
+
+.network-radio-btn.selected:disabled {
+  background-color: #4349c0;
+  opacity: 0.6;
+}
+
+/* Enhanced Footer Styles */
+.app-footer {
+  margin-top: auto;
+  width: 100%;
+  padding: 30px 0;
+  border-top: 1px solid #333;
+  background-color: #1a1a1a;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.app-footer .network-info {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin-top: 0;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.app-footer h2 {
+  color: #ffffffde;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.app-footer h2:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #535bf2, #4349c0);
+  border-radius: 2px;
+}
+
+.app-footer .info-item {
+  padding: 12px 20px;
+  margin-bottom: 10px;
+  background-color: #232323;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 3px solid #535bf2;
+}
+
+.app-footer .info-item:last-child {
+  margin-bottom: 0;
+}
+
+.app-footer .info-item .label {
+  font-weight: 600;
+  color: #ffffffaa;
+}
+
+.app-footer .info-item .value {
+  font-family: monospace;
+  color: #646cff;
+  max-width: 70%;
+  word-break: break-all;
+  text-align: right;
+}
+
+/* Button Consistency - Add common button styles */
+.update-button,
+.submit-button,
+.estimate-button,
+.back-link {
+  margin-top: 20px; /* Consistent margin across all primary action buttons */
+}
+
+/* Make sure buttons in form-actions don't get double margin */
+.form-actions .submit-button,
+.form-actions .back-link {
+  margin-top: 0; /* Remove individual button margins inside form-actions */
 }

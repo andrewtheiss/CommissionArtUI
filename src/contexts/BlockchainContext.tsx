@@ -1,10 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import ethersService from './ethers-service';
 import { NetworkConfig } from './config';
 import config from './config';
 import { ethers } from 'ethers';
 
-type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet';
+type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
 
 // Authentication types
 export type AuthMethod = 'web3' | 'email' | 'none';
@@ -63,22 +63,42 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   const [emailAddress, setEmailAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check connection status on mount
-    const checkConnection = async () => {
-      const connected = await ethersService.isConnected();
-      if (connected) {
-        setIsConnected(true);
-        setAuthMethod('web3');
-        const address = await ethersService.getWalletAddress();
-        setWalletAddress(address);
+    let isMounted = true;
+
+    const initializeBlockchainConnection = async () => {
+      try {
+        const connected = await ethersService.isConnected();
+        if (!isMounted) return;
+
+        if (connected) {
+          setIsConnected(true);
+          setAuthMethod('web3');
+          const address = await ethersService.getWalletAddress();
+          if (!isMounted) return;
+          setWalletAddress(address);
+        }
+      } catch (error) {
+        console.error('Failed to check connection:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     };
     
-    checkConnection();
+    initializeBlockchainConnection();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const switchNetwork = async (newNetworkType: NetworkType) => {
+  const switchNetwork = useCallback(async (newNetworkType: NetworkType) => {
+    // Skip if already on this network
+    if (newNetworkType === networkType) {
+      return;
+    }
+
     const newNetwork = ethersService.switchNetwork(newNetworkType);
     setNetworkType(newNetworkType);
     setNetwork(newNetwork);
@@ -90,15 +110,21 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         setAuthMethod('web3');
       }
     });
-  };
+  }, [networkType]);
 
-  const switchToLayer = (layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet') => {
+  const switchToLayer = useCallback((layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet') => {
     const targetNetwork = mapLayerToNetwork(layer, environment);
+    
+    // Skip if already on this network
+    if (targetNetwork === networkType) {
+      return;
+    }
+    
     console.log(`Switching to layer ${layer} (${environment}) => network ${targetNetwork}`);
     switchNetwork(targetNetwork);
-  };
+  }, [networkType, switchNetwork]);
 
-  const connectWallet = async () => {
+  const connectWallet = useCallback(async () => {
     try {
       setIsLoading(true);
       const signer = await ethersService.getSigner();
@@ -116,9 +142,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const connectWithEmail = async (email: string) => {
+  const connectWithEmail = useCallback(async (email: string) => {
     try {
       setIsLoading(true);
       
@@ -143,16 +169,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
     setIsConnected(false);
     setAuthMethod('none');
     setWalletAddress(null);
     setEmailAddress(null);
-  };
+  }, []);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     // Authentication state
     isConnected,
     isLoading,
@@ -172,7 +199,20 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     
     // General methods
     disconnect
-  };
+  }), [
+    isConnected, 
+    isLoading, 
+    authMethod, 
+    networkType, 
+    network, 
+    switchNetwork, 
+    switchToLayer, 
+    connectWallet, 
+    walletAddress, 
+    connectWithEmail, 
+    emailAddress, 
+    disconnect
+  ]);
 
   return (
     <BlockchainContext.Provider value={value}>

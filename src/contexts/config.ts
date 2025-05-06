@@ -16,13 +16,15 @@ interface NetworkConfigs {
   local: NetworkConfig;
   arbitrum_testnet: NetworkConfig;
   arbitrum_mainnet: NetworkConfig;
+  testnet: NetworkConfig;
+  mainnet: NetworkConfig;
 }
 
 const networks: NetworkConfigs = {
   animechain: {
     name: 'AnimeChain',
-    chainId: 17608,
-    rpcUrl: 'https://rpc.animechain.network',
+    chainId: 69000,
+    rpcUrl: 'https://rpc-animechain-39xf6m45e3.t.conduit.xyz',
     blockExplorerUrl: 'https://explorer.animechain.network',
     tokenName: 'Anime',
     tokenSymbol: 'ANIME',
@@ -78,11 +80,31 @@ const networks: NetworkConfigs = {
     tokenSymbol: 'ETH',
     tokenDecimals: 18,
     isTestnet: false
+  },
+  testnet: {
+    name: 'Commission Testnet',
+    chainId: 421614,
+    rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
+    blockExplorerUrl: 'https://sepolia-explorer.arbitrum.io',
+    tokenName: 'Ether',
+    tokenSymbol: 'ETH',
+    tokenDecimals: 18,
+    isTestnet: true
+  },
+  mainnet: {
+    name: 'Commission Mainnet',
+    chainId: 42161,
+    rpcUrl: 'https://arb1.arbitrum.io/rpc',
+    blockExplorerUrl: 'https://explorer.arbitrum.io',
+    tokenName: 'Ether',
+    tokenSymbol: 'ETH',
+    tokenDecimals: 18,
+    isTestnet: false
   }
 };
 
 const config = {
-  defaultNetwork: 'animechain',
+  defaultNetwork: 'testnet',
   networks
 };
 
