@@ -1,47 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home'
 import UpdateNFTOwnership from './pages/UpdateNFTOwnership'
 import WelcomeWidget from './components/WelcomeWidget'
+import { BlockchainProvider, useBlockchain } from './contexts/BlockchainContext'
+
+// Network Status component that uses the blockchain context
+const NetworkStatus = () => {
+  const { isConnected, isLoading, networkType, network } = useBlockchain();
+  
+  // Determine layer based on network type
+  const getLayer = () => {
+    if (networkType === 'animechain') return 'L3';
+    if (networkType === 'arbitrum_mainnet' || networkType === 'arbitrum_testnet') return 'L2';
+    return 'L1';
+  };
+  
+  return (
+    <div className={isLoading ? "blockchain-status loading" : "blockchain-status"}>
+      <p>
+        Network: <span className="network-name">{network.name}</span>
+        <span className="environment">{getLayer()}</span>
+        {!isConnected && <span className="disconnected"> (Disconnected)</span>}
+      </p>
+    </div>
+  );
+};
 
 function App() {
-  const [loading, setLoading] = useState(true);
-  const [connected, setConnected] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
-  // Effect to simulate connection
-  useEffect(() => {
-    setTimeout(() => {
-      setConnected(true);
-      setLoading(false);
-    }, 1500);
-  }, []);
-
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <div className="app-header">
-          <div className={loading ? "blockchain-status loading" : "blockchain-status"}>
-            <p>
-              Network: <span className="network-name">AnimeChain</span>
-              <span className="environment">L3</span>
-              {!connected && <span className="disconnected"> (Disconnected)</span>}
-            </p>
+    <BlockchainProvider>
+      <BrowserRouter>
+        <div className="app-container">
+          <div className="app-header">
+            <NetworkStatus />
+            <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
           </div>
-          <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
+          
+          <h1>Latest Commissions</h1>
+          
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/update-nft" element={<UpdateNFTOwnership />} />
+          </Routes>
+          
+          <WelcomeWidget visible={showWelcome} onClose={() => setShowWelcome(false)} />
         </div>
-        
-        <h1>Latest Commissions</h1>
-        
-        <Routes>
-          <Route path="/" element={<Home loading={loading} connected={connected} />} />
-          <Route path="/update-nft" element={<UpdateNFTOwnership />} />
-        </Routes>
-        
-        <WelcomeWidget visible={showWelcome} onClose={() => setShowWelcome(false)} />
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </BlockchainProvider>
   )
 }
 

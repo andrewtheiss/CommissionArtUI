@@ -1,0 +1,98 @@
+.authentication-widget {
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 350px;
+}
+
+.authentication-widget h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.auth-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.authentication-widget button {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.connect-wallet-btn {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.connect-wallet-btn:hover {
+  background-color: #4338ca;
+}
+
+.email-auth-btn, .email-submit-btn {
+  background-color: #10b981;
+  color: white;
+}
+
+.email-auth-btn:hover, .email-submit-btn:hover {
+  background-color: #059669;
+}
+
+.greyed-out {
+  background-color: #9ca3af;
+  color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.greyed-out:hover {
+  background-color: #9ca3af;
+}
+
+.disconnect-btn {
+  background-color: #ef4444;
+  color: white;
+  margin-top: 1rem;
+}
+
+.disconnect-btn:hover {
+  background-color: #dc2626;
+}
+
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.authentication-widget input {
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+.account-info {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.account-info p {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.address, .email-address {
+  font-family: monospace;
+  word-break: break-all;
+} 

@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useBlockchain } from '../contexts/BlockchainContext';
 
-interface HomeProps {
-  loading?: boolean;
-  connected?: boolean;
-}
-
-const Home: React.FC<HomeProps> = ({ loading = true, connected = false }) => {
+const Home = () => {
+  const { isConnected, isLoading } = useBlockchain();
   const [contracts, setContracts] = useState<string[]>([]);
   
   // Number of placeholder images to show initially
@@ -49,7 +46,7 @@ const Home: React.FC<HomeProps> = ({ loading = true, connected = false }) => {
       <div className="image-grid">
         {renderPlaceholders()}
         
-        {loading && (
+        {isLoading && (
           <div className="loading-overlay">
             <div className="spinner"></div>
             <p>Connecting to AnimeChain...</p>
