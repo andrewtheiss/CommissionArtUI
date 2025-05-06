@@ -25,3 +25,5 @@ dist-ssr
 
 .firebase/
 .vite/
+.abis/
+src/assets/abis/*.json
