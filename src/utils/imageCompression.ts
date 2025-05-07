@@ -29,11 +29,11 @@ export interface CompressionResult {
 export const compressImage = async (
   input: File | Blob | string,
   options: CompressionOptions = { 
-    format: 'webp', 
+    format: 'webp', // Default to WebP only 
     quality: 0.8, 
     maxWidth: null, 
     maxHeight: null,
-    targetSizeKB: 43,
+    targetSizeKB: 44.7,
     autoOptimize: true
   }
 ): Promise<string | CompressionResult> => {
@@ -42,7 +42,7 @@ export const compressImage = async (
     quality = 0.8,
     maxWidth = null,
     maxHeight = null,
-    targetSizeKB = 43,
+    targetSizeKB = 44.7,
     autoOptimize = true
   } = options;
 
@@ -134,12 +134,12 @@ export const compressImage = async (
  */
 const optimizeImageForSize = async (
   input: File | Blob | string,
-  targetSizeKB: number = 43
+  targetSizeKB: number = 44.7
 ): Promise<CompressionResult> => {
   console.log(`Starting auto-optimization to target ${targetSizeKB}KB`);
   
-  // Format options in order of preference (better quality comes first)
-  const formatOptions: Array<'avif' | 'webp' | 'jpeg'> = ['avif', 'webp', 'jpeg'];
+  // Only use WebP format
+  const formatOptions: Array<'webp'> = ['webp'];
   
   // Load the image
   let imageDataUrl: string;
@@ -147,6 +147,65 @@ const optimizeImageForSize = async (
     imageDataUrl = input;
   } else {
     imageDataUrl = await fileToDataUrl(input as File | Blob);
+  }
+  
+  // Check original file size first
+  const originalSize = typeof input === 'string' 
+    ? calculateDataUrlSizeKB(input) 
+    : (input as File).size / 1024;
+  
+  console.log(`Original size: ${originalSize.toFixed(2)} KB`);
+  
+  // If the original file is already under the threshold, keep it as is or convert to WebP
+  if (originalSize <= targetSizeKB) {
+    console.log(`Original image is already under threshold (${originalSize.toFixed(2)} KB ≤ ${targetSizeKB.toFixed(2)} KB)`);
+    
+    // If original is within 10% of the target and already WebP, just use it as-is
+    if (originalSize >= targetSizeKB * 0.9) {
+      console.log(`Original is close enough to target, checking format`);
+      
+      let currentFormat = '';
+      if (typeof input === 'string') {
+        currentFormat = getImageFormat(input).toLowerCase();
+      } else {
+        currentFormat = (input as File).type.split('/')[1].toLowerCase();
+      }
+      
+      // If already WebP and within size, keep as is
+      if (currentFormat === 'webp') {
+        console.log(`Original is already WebP format, keeping as-is`);
+        
+        if (typeof input === 'string') {
+          // For data URL input
+          const dimensions = await getImageDimensions(input);
+          return addByteArray({
+            dataUrl: input,
+            width: dimensions.width,
+            height: dimensions.height,
+            sizeKB: originalSize,
+            format: 'webp',
+            quality: 1.0 // Assume original quality
+          });
+        } else {
+          // For File input
+          const info = await getImageInfo(input as File);
+          return addByteArray({
+            dataUrl: info.dataUrl,
+            width: info.dimensions.width,
+            height: info.dimensions.height,
+            sizeKB: info.sizeKB,
+            format: 'webp',
+            quality: 1.0 // Assume original quality
+          });
+        }
+      } else {
+        // Not WebP, convert to WebP at high quality
+        console.log(`Original is not WebP (${currentFormat}), converting to WebP at high quality`);
+      }
+    } else {
+      // If original is more than 10% below target, try to improve the quality but stick with WebP
+      console.log(`Original is under target, optimizing WebP quality while keeping size under threshold`);
+    }
   }
   
   // Get original image dimensions
@@ -199,7 +258,7 @@ const optimizeImageForSize = async (
           console.log(`New best result: ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
           
           // If we're very close to target with a good format, we can stop early
-          if (sizeKB > targetSizeKB * 0.95 && (format === 'avif' || format === 'webp')) {
+          if (sizeKB > targetSizeKB * 0.95) {
             console.log(`Optimal result found early, stopping search`);
             return addByteArray(bestResult);
           }
@@ -257,7 +316,7 @@ const optimizeImageForSize = async (
               console.log(`New best result: ${width}x${height} ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
               
               // If we're very close to target with a good format, we can stop early
-              if (sizeKB > targetSizeKB * 0.95 && (format === 'avif' || format === 'webp')) {
+              if (sizeKB > targetSizeKB * 0.95) {
                 console.log(`Optimal result found, stopping search`);
                 return addByteArray(bestResult);
               }
@@ -278,9 +337,9 @@ const optimizeImageForSize = async (
     }
   }
   
-  // If we still haven't found a good result, use the smallest JPEG at lowest quality as fallback
+  // If we still haven't found a good result, use WebP at lowest quality as fallback (instead of JPEG)
   if (!bestResult) {
-    console.log(`Unable to meet target size, using minimum size JPEG fallback`);
+    console.log(`Unable to meet target size, using minimum size WebP fallback`);
     
     const width = Math.round(originalWidth * 0.3);
     const height = Math.round(originalHeight * 0.3);
@@ -292,8 +351,8 @@ const optimizeImageForSize = async (
     const ctx = canvas.getContext('2d');
     ctx?.drawImage(img, 0, 0, width, height);
     
-    // Use JPEG at lowest quality
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.3);
+    // Use WebP at lowest quality
+    const dataUrl = canvas.toDataURL('image/webp', 0.3);
     const sizeKB = calculateDataUrlSizeKB(dataUrl);
     
     bestResult = {
@@ -301,11 +360,11 @@ const optimizeImageForSize = async (
       width,
       height,
       sizeKB,
-      format: 'jpeg',
+      format: 'webp',
       quality: 0.3
     };
     
-    console.log(`Fallback result: ${width}x${height} JPEG at minimum quality (${sizeKB.toFixed(2)}KB)`);
+    console.log(`Fallback result: ${width}x${height} WebP at minimum quality (${sizeKB.toFixed(2)}KB)`);
   }
   
   return addByteArray(bestResult);

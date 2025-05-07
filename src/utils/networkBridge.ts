@@ -1,5 +1,5 @@
 import { getNetwork, setNetwork as setGlobalNetwork, NetworkType as GlobalNetworkType } from '../config/network';
-import { mapLayerToNetwork } from '../contexts/BlockchainContext';
+import { mapLayerToNetwork } from './networkUtils';
 
 // Store the last synced network to avoid unnecessary updates
 let lastSyncedNetwork: GlobalNetworkType | null = null;
@@ -29,8 +29,8 @@ export const syncNetworkWithBlockchain = (blockchainSwitchToLayer: (layer: 'l1' 
     // Update the last synced network
     lastSyncedNetwork = currentGlobalNetwork;
     
-    // Determine the appropriate layer based on global network - always use L3 for our networks
-    const layer: 'l1' | 'l2' | 'l3' = 'l3';
+    // Determine the appropriate layer based on global network - always use L2 for our networks
+    const layer: 'l1' | 'l2' | 'l3' = 'l2';
     
     // Call the blockchain context method
     blockchainSwitchToLayer(layer, currentGlobalNetwork);
@@ -69,8 +69,8 @@ export const setNetworkEverywhere = (
     // Update the last synced network
     lastSyncedNetwork = network;
     
-    // Always use L3 for simplicity
-    blockchainSwitchToLayer('l3', network);
+    // Always use L2 for simplicity
+    blockchainSwitchToLayer('l2', network);
     
     console.log(`Network set everywhere to: ${network}`);
   } finally {

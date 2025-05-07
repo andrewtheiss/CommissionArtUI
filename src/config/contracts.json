@@ -1,6 +1,6 @@
 {
   "networks": {
-    "testnet": {
+    "testnet-l2": {
       "l1": {
         "address": "0xDdc84E4CF833b5AE92A2aA7F4edc59bdcB4b6F0F",
         "contract": "L1QueryOwner"
@@ -18,7 +18,37 @@
         "contract": "CommissionHub"
       },
       "artPiece": {
-        "address": "0xb663053448AC33f8e880Ee2eF877895db599A7f3",
+        "address": "0x05BAdf8fd485Bd96511717815BD02346A0ebB328",
+        "contract": "ArtPiece"
+      },
+      "profileTemplate": {
+        "address": "0xCB5ba99bAECb67F8282426d2d993888975af6d8E",
+        "contract": "Profile"
+      },
+      "profileHub": {
+        "address": "0x26e9f10892D82440C63A981e0c2Bb686b4b54169",
+        "contract": "ProfileHub"
+      }
+    },
+    "testnet-l3": {
+      "l1": {
+        "address": "0xDdc84E4CF833b5AE92A2aA7F4edc59bdcB4b6F0F",
+        "contract": "L1QueryOwner"
+      },
+      "l2": {
+        "address": "0x32BFa3AD2408821FA1631681F81603a84612687c",
+        "contract": "L2Relay"
+      },
+      "l3": {
+        "address": "0x89244283543881Af0E005AE6B4eb713d3603974c",
+        "contract": "OwnerRegistry"
+      },
+      "commissionHub": {
+        "address": "0x78c39bB3072b43D9B7A4B9116E7A87FbE19A69ef",
+        "contract": "CommissionHub"
+      },
+      "artPiece": {
+        "address": "0x05BAdf8fd485Bd96511717815BD02346A0ebB328",
         "contract": "ArtPiece"
       },
       "profileTemplate": {

@@ -4,6 +4,8 @@ import { useBlockchain } from '../contexts/BlockchainContext';
 const Home = () => {
   const { isConnected, isLoading, networkType, network } = useBlockchain();
   const [contracts, setContracts] = useState<string[]>([]);
+  // Track when initial data is being loaded
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   // Number of placeholder images to show initially
   const placeholderCount = 6;
@@ -18,6 +20,7 @@ const Home = () => {
 
     setTimeout(() => {
       setContracts(mockContracts);
+      setIsDataLoading(false);
     }, 1500);
   }, []);
 
@@ -45,10 +48,10 @@ const Home = () => {
     <div className="container">
       <div className="image-grid">
         {renderPlaceholders()}
-        {isLoading && (
+        {isDataLoading && (
           <div className="loading-overlay">
             <div className="spinner"></div>
-            <p>Connecting to AnimeChain...</p>
+            <p>Loading data...</p>
           </div>
         )}
       </div>

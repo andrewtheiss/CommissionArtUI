@@ -11,6 +11,7 @@ export interface NetworkConfig {
 
 interface NetworkConfigs {
   animechain: NetworkConfig;
+  animechain_testnet: NetworkConfig;
   dev: NetworkConfig;
   prod: NetworkConfig;
   local: NetworkConfig;
@@ -30,6 +31,16 @@ const networks: NetworkConfigs = {
     tokenSymbol: 'ANIME',
     tokenDecimals: 18,
     isTestnet: false
+  },
+  animechain_testnet: {
+    name: 'AnimeChain Testnet',
+    chainId: 6900,
+    rpcUrl: 'https://6900.rpc.thirdweb.com',
+    blockExplorerUrl: 'https://explorer-animechain-testnet-i8yja6a1a0.t.conduit.xyz',
+    tokenName: 'Animecoin',
+    tokenSymbol: 'ANIME',
+    tokenDecimals: 18,
+    isTestnet: true
   },
   dev: {
     name: 'Ethereum Sepolia',

@@ -1,6 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { compressImage, fileToDataUrl, getImageInfo, dataUrlToByteArray, CompressionResult } from '../utils/imageCompression';
+import { useArtPieceTemplateContract, createArtPiece } from '../contracts/ArtPieceContract';
+import { useBlockchain } from '../contexts/BlockchainContext';
+import { ethers } from 'ethers';
+import { getUserProfile, createNewArtPieceAndRegisterProfile } from '../contracts/ProfileHubContract';
+import { getContractAddress } from '../utils/contracts';
+import { createArtPieceOnProfile } from '../contracts/ProfileContract';
 
 interface ArtFormData {
   title: string;
@@ -10,11 +16,19 @@ interface ArtFormData {
 }
 
 const AddArt: React.FC = () => {
+  // Blockchain integration
+  const { isConnected, walletAddress, network, hasUserProfile, checkUserProfile } = useBlockchain();
+  const artPieceTemplateContract = useArtPieceTemplateContract();
+
   // Form state
   const [formData, setFormData] = useState<ArtFormData>({
     title: '',
     description: ''
   });
+
+  // Profile state
+  const [userProfileAddress, setUserProfileAddress] = useState<string | null>(null);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(false);
 
   // Image state
   const [isDragging, setIsDragging] = useState(false);
@@ -30,8 +44,44 @@ const AddArt: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [contractAddress, setContractAddress] = useState<string | null>(null);
+  const [aiGenerated, setAiGenerated] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Check if the user has a profile
+  useEffect(() => {
+    const fetchProfileAddress = async () => {
+      if (!isConnected || !walletAddress) {
+        setUserProfileAddress(null);
+        return;
+      }
+
+      setIsCheckingProfile(true);
+      
+      try {
+        // Create a provider
+        const provider = new ethers.JsonRpcProvider(network.rpcUrl);
+        
+        // Get profile address from ProfileHub
+        const profileAddr = await getUserProfile(walletAddress, provider);
+        setUserProfileAddress(profileAddr);
+      } catch (error) {
+        console.error('Error checking user profile address:', error);
+        setUserProfileAddress(null);
+      } finally {
+        setIsCheckingProfile(false);
+      }
+    };
+    
+    fetchProfileAddress();
+    
+    // Also refresh the profile status in the blockchain context
+    if (isConnected) {
+      checkUserProfile();
+    }
+  }, [isConnected, walletAddress, network.rpcUrl, checkUserProfile]);
   
   // Handle file selection from input or drop
   const handleFileSelect = async (file: File) => {
@@ -76,7 +126,7 @@ const AddArt: React.FC = () => {
         quality: 0.8,
         maxWidth: null,
         maxHeight: null,
-        targetSizeKB: 43, 
+        targetSizeKB: 44, 
         autoOptimize: true
       }) as CompressionResult;
       
@@ -162,36 +212,145 @@ const AddArt: React.FC = () => {
       setError('Image is required');
       return;
     }
+
+    if (!isConnected || !walletAddress) {
+      setError('Please connect your wallet first');
+      return;
+    }
+    
+    if (!artPieceTemplateContract) {
+      setError('Contract template not available');
+      return;
+    }
     
     setIsSaving(true);
+    setError(null);
     
     try {
-      // This would normally be an API call to save the artwork
-      console.log('Saving artwork:', {
+      console.log('Saving artwork to blockchain:', {
         title: formData.title,
         description: formData.description,
-        imageFormat: formData.format,
-        imageDataByteLength: formData.imageData?.byteLength
+        imageFormat: formData.format || 'webp',
+        imageDataSize: formData.imageData.length,
+        aiGenerated,
+        hasProfile: hasUserProfile,
+        profileAddress: userProfileAddress
       });
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSaveSuccess(true);
-      
-      // Reset form after successful save
-      setTimeout(() => {
-        setFormData({
-          title: '',
-          description: ''
-        });
-        setSelectedFile(null);
-        setOriginalPreview(null);
-        setCompressedImage(null);
-        setOriginalInfo(null);
-        setSaveSuccess(false);
-      }, 3000);
-      
+      try {
+        // Get a provider with signer to make transactions
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        
+        let tx;
+        let newContractAddress;
+        
+        // Get the art piece template address
+        const artPieceTemplateAddress = getContractAddress('artPiece');
+        
+        // If user has a profile, call createArtPiece on the profile contract
+        if (hasUserProfile === true && userProfileAddress) {
+          console.log('Using Profile contract to create art piece');
+          
+          // Use the Profile contract to create the art piece
+          const result = await createArtPieceOnProfile(
+            userProfileAddress,
+            artPieceTemplateAddress,
+            formData.imageData, // Use original Uint8Array
+            formData.format || 'webp',
+            formData.title,
+            formData.description || '',
+            true, // isArtist
+            ethers.ZeroAddress, // otherParty
+            ethers.ZeroAddress, // commissionHub
+            aiGenerated,
+            signer
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.artPieceAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+          
+          console.log('Art piece created successfully through Profile contract');
+        }
+        // If user doesn't have a profile, use ProfileHub to create both
+        else if (hasUserProfile === false) {
+          console.log('Using ProfileHub to create art piece and profile');
+          
+          // Use the ProfileHub contract to create the art piece and profile
+          const result = await createNewArtPieceAndRegisterProfile(
+            artPieceTemplateAddress,
+            formData.imageData, // Use original Uint8Array
+            formData.format || 'webp',
+            formData.title,
+            formData.description || '',
+            true, // isArtist
+            ethers.ZeroAddress, // otherParty
+            ethers.ZeroAddress, // commissionHub
+            aiGenerated,
+            signer
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.artPieceAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+          
+          // Update profile status
+          await checkUserProfile();
+          
+          console.log('Art piece and profile created successfully through ProfileHub');
+        }
+        // Fallback to the original method if profile status is unknown
+        else {
+          console.log('Creating art piece without profile integration');
+          
+          const result = await createArtPiece(
+            formData.title,
+            formData.description || '',
+            formData.imageData, // Use original Uint8Array
+            formData.format || 'webp',
+            signer,
+            aiGenerated
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.contractAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+        }
+        
+        console.log('Transaction sent:', tx.hash);
+        setTxHash(tx.hash);
+        setContractAddress(newContractAddress);
+        
+        console.log('Transaction confirmed');
+        
+        setSaveSuccess(true);
+        
+        // Reset form after successful save
+        setTimeout(() => {
+          setFormData({
+            title: '',
+            description: ''
+          });
+          setSelectedFile(null);
+          setOriginalPreview(null);
+          setCompressedImage(null);
+          setOriginalInfo(null);
+          setSaveSuccess(false);
+          setTxHash(null);
+          setContractAddress(null);
+          setAiGenerated(false);
+        }, 5000);
+      } catch (contractError) {
+        console.error('Contract interaction error:', contractError);
+        setError(`Contract error: ${contractError instanceof Error ? contractError.message : 'Unknown error'}`);
+      }
     } catch (err) {
       console.error('Error saving artwork:', err);
       setError('Failed to save artwork');
@@ -201,13 +360,33 @@ const AddArt: React.FC = () => {
   };
   
   // Determine if form is valid
-  const isFormValid = formData.title.trim() !== '' && !!formData.imageData;
+  const isFormValid = formData.title.trim() !== '' && !!formData.imageData && isConnected;
   
+  // Add AI generated checkbox
+  const handleAiGeneratedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAiGenerated(e.target.checked);
+  };
+
   return (
     <div className="add-art-page">
       <div className="add-art-container">
         <div className="add-art-header">
           <h2>Add Artwork</h2>
+          {!isConnected && (
+            <div className="wallet-warning">
+              Please connect your wallet to save artwork to the blockchain
+            </div>
+          )}
+          {isConnected && hasUserProfile === true && (
+            <div className="profile-info success">
+              Your artwork will be added to your profile automatically
+            </div>
+          )}
+          {isConnected && hasUserProfile === false && (
+            <div className="profile-info warning">
+              A profile will be created for you when you save your artwork
+            </div>
+          )}
         </div>
         
         <form onSubmit={handleSubmit} className="add-art-form">
@@ -280,7 +459,27 @@ const AddArt: React.FC = () => {
             
             {saveSuccess && (
               <div className="compression-status success">
-                <span>Artwork saved successfully!</span>
+                <span>Artwork saved successfully to the blockchain!</span>
+                {txHash && (
+                  <a 
+                    href={`https://sepolia-explorer.arbitrum.io/tx/${txHash}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="tx-link"
+                  >
+                    View transaction
+                  </a>
+                )}
+                {contractAddress && (
+                  <a 
+                    href={`https://sepolia-explorer.arbitrum.io/address/${contractAddress}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="tx-link"
+                  >
+                    View contract
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -311,6 +510,17 @@ const AddArt: React.FC = () => {
               />
             </div>
             
+            <div className="form-group checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={aiGenerated}
+                  onChange={handleAiGeneratedChange}
+                />
+                AI Generated Artwork
+              </label>
+            </div>
+            
             <div className="form-actions">
               <Link to="/" className="back-link">Cancel</Link>
               <button
@@ -318,7 +528,7 @@ const AddArt: React.FC = () => {
                 className="submit-button"
                 disabled={!isFormValid || isCompressing || isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save Artwork'}
+                {isSaving ? 'Saving to Blockchain...' : 'Save Artwork'}
                 {isSaving && <span className="spinner"></span>}
               </button>
             </div>
