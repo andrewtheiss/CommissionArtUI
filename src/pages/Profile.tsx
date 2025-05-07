@@ -6,6 +6,9 @@ import { getProfileInfo, getProfileRecentArtPieces } from '../contracts/ProfileC
 import { ethers } from 'ethers';
 import { getContractAddress } from '../utils/contracts';
 import { loadABI } from '../utils/abi';
+import { getArtPieceData } from '../contracts/ArtPieceContract';
+import ArtDisplay from '../components/ArtDisplay';
+import './Profile.css';
 
 // Placeholder image until we load from blockchain
 const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/150';
@@ -13,9 +16,13 @@ const DEFAULT_PROFILE_IMAGE = 'https://via.placeholder.com/150';
 // Interface for art piece data
 interface ArtPieceData {
   address: string;
-  title?: string;
-  description?: string;
-  imageUrl?: string;
+  title: string;
+  description: string;
+  tokenUriData?: Uint8Array;
+  tokenUriFormat?: string;
+  owner?: string;
+  artist?: string;
+  isLoaded?: boolean;
 }
 
 const Profile: React.FC = () => {
@@ -69,8 +76,11 @@ const Profile: React.FC = () => {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
         
+        console.debug(`Fetching profile address for wallet address: ${address}`);
         // Get profile address from ProfileHub
         const profileAddr = await getUserProfile(address, provider);
+        console.debug(`ProfileHub returned profile address: ${profileAddr}`);
+        
         setProfileAddress(profileAddr);
         setIsCheckingProfile(false);
       } catch (error) {
@@ -92,8 +102,10 @@ const Profile: React.FC = () => {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
         
-        // Get profile info
+        console.debug(`Loading profile info for profile address: ${profileAddress}`);
+        // Get profile info using the profileAddress obtained from ProfileHub
         const info = await getProfileInfo(profileAddress, provider);
+        console.debug(`Profile info loaded for ${profileAddress}:`, info);
         
         setProfileData({
           name: `Profile at ${info.owner?.substring(0, 6)}...${info.owner?.substring(38)}`,
@@ -102,7 +114,7 @@ const Profile: React.FC = () => {
           owner: info.owner || address || '',
         });
       } catch (error) {
-        console.error('Error loading profile data:', error);
+        console.error(`Error loading profile data for profile ${profileAddress}:`, error);
       }
     };
     
@@ -120,51 +132,75 @@ const Profile: React.FC = () => {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
         
-        // Get recent art pieces
+        console.debug(`Loading art pieces for profile: ${profileAddress}`);
+        // Use the profileAddress obtained from ProfileHub to get recent art pieces
         const artPieceAddresses = await getProfileRecentArtPieces(profileAddress, provider);
+        console.debug(`Found ${artPieceAddresses.length} art pieces for profile: ${profileAddress}`);
         
-        // For now, we'll use placeholder data with the real addresses
-        const mockArtPieces = artPieceAddresses.map((artAddress, index) => ({
-          address: artAddress,
-          title: `Artwork ${index + 1}`,
-          description: 'This is a sample artwork description',
-          imageUrl: `https://picsum.photos/seed/${index + 1}/300/200`,
+        // Initialize art pieces array with minimal data
+        const artPiecesInitial = artPieceAddresses.map(address => ({
+          address,
+          title: 'Loading...',
+          description: 'Loading artwork data...',
+          isLoaded: false
         }));
         
-        // If no art pieces were found, use mock data for demonstration
-        if (mockArtPieces.length === 0) {
-          const placeholders = Array(6).fill(null).map((_, index) => ({
-            address: `0x${index}abcdef1234567890abcdef1234567890abcdef12`,
-            title: `Artwork ${index + 1}`,
-            description: 'This is a sample artwork description',
-            imageUrl: `https://picsum.photos/seed/${index + 1}/300/200`,
-          }));
-          
-          setMyArtPieces(placeholders);
-        } else {
-          setMyArtPieces(mockArtPieces);
+        // Set initial state while we load the full data
+        setMyArtPieces(artPiecesInitial);
+        
+        // Load detailed data for each art piece in parallel
+        const artPiecesPromises = artPieceAddresses.map(async (artAddress, index) => {
+          try {
+            // Get detailed art piece data including the image data
+            const artData = await getArtPieceData(artAddress, provider);
+            
+            return {
+              address: artAddress,
+              title: artData.title,
+              description: artData.description,
+              tokenUriData: artData.tokenUriData,
+              tokenUriFormat: artData.tokenUriFormat,
+              owner: artData.owner,
+              artist: artData.artist,
+              isLoaded: true
+            };
+          } catch (error) {
+            console.error(`Error loading data for art piece ${artAddress}:`, error);
+            // Return the minimal data with error status
+            return {
+              ...artPiecesInitial[index],
+              title: 'Error loading artwork',
+              description: 'Could not load artwork data. Please try again later.',
+              isLoaded: true
+            };
+          }
+        });
+        
+        // Wait for all art piece data to load
+        const loadedArtPieces = await Promise.all(artPiecesPromises);
+        
+        // Update state with the loaded art pieces
+        setMyArtPieces(loadedArtPieces);
+        
+        // If we're an artist, we should also load commissioned works
+        // For now, this is left as a placeholder
+        if (profileData.isArtist) {
+          // For commissioned works, we'll use placeholders for now
+          // In a real implementation, you'd fetch these from the artist's commissioned works
+          setCommissionedWorks([]);
         }
         
-        // For commissioned works, we'll use mock data for now
-        const mockCommissions = Array(4).fill(null).map((_, index) => ({
-          address: `0x${index}fedcba0987654321fedcba0987654321fedcba09`,
-          title: `Commission ${index + 1}`,
-          description: 'This is a sample commission description',
-          imageUrl: `https://picsum.photos/seed/${index + 10}/300/200`,
-        }));
-        
-        setCommissionedWorks(mockCommissions);
         setIsLoadingArt(false);
       } catch (error) {
-        console.error('Error loading art pieces:', error);
+        console.error(`Error loading art pieces for profile ${profileAddress}:`, error);
         setIsLoadingArt(false);
       }
     };
     
     loadArtPieces();
-  }, [profileAddress, isConnected, network.rpcUrl]);
+  }, [profileAddress, isConnected, network.rpcUrl, profileData.isArtist]);
   
-  // Reusable art gallery component
+  // Reusable art gallery component with ArtDisplay
   const ArtGallery = ({ title, artPieces }: { title: string, artPieces: ArtPieceData[] }) => (
     <div className="art-gallery-section">
       <h2>{title}</h2>
@@ -181,14 +217,27 @@ const Profile: React.FC = () => {
         <div className="art-gallery-grid">
           {artPieces.map((art, index) => (
             <div key={index} className="art-item">
-              <div className="art-image-container">
-                <img src={art.imageUrl} alt={art.title} className="art-image" />
-              </div>
-              <div className="art-details">
-                <h3 className="art-title">{art.title}</h3>
-                <p className="art-description">{art.description}</p>
-                <p className="art-address">{`${art.address.substring(0, 6)}...${art.address.substring(38)}`}</p>
-              </div>
+              {art.tokenUriData ? (
+                <ArtDisplay 
+                  imageData={art.tokenUriData} 
+                  title={art.title}
+                  contractAddress={art.address}
+                  className="art-display-component"
+                />
+              ) : (
+                <div className="art-fallback-container">
+                  <div className="art-image-container">
+                    <div className="art-loading-placeholder">
+                      <p>Loading artwork data...</p>
+                    </div>
+                  </div>
+                  <div className="art-details">
+                    <h3 className="art-title">{art.title}</h3>
+                    <p className="art-description">{art.description}</p>
+                    <p className="art-address">{`${art.address.substring(0, 6)}...${art.address.substring(38)}`}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -276,7 +325,7 @@ const Profile: React.FC = () => {
         address: `0x${index}abcdef1234567890abcdef1234567890abcdef12`,
         title: `Artwork ${index + 1}`,
         description: 'This is a sample artwork description',
-        imageUrl: `https://picsum.photos/seed/${index + 1}/300/200`,
+        isLoaded: true
       }));
       
       setMyArtPieces(placeholders);

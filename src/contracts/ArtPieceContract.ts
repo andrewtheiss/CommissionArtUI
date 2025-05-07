@@ -333,6 +333,91 @@ export async function createArtPiece(
   }
 }
 
+/**
+ * Get comprehensive art piece data including token URI data
+ * @param artPieceAddress The address of the art piece contract
+ * @param provider The provider to use for the contract call
+ * @returns Promise resolving to the art piece data including image data
+ */
+export async function getArtPieceData(
+  artPieceAddress: string,
+  provider: ethers.BrowserProvider | ethers.JsonRpcProvider | ethers.JsonRpcSigner
+): Promise<{
+  title: string;
+  description: string;
+  owner: string;
+  artist: string;
+  commissionHub: string;
+  tokenUriData: Uint8Array;
+  tokenUriFormat: string;
+  contractAddress: string;
+}> {
+  try {
+    const contract = getArtPieceContract(artPieceAddress, provider);
+    
+    // Fetch all relevant data in parallel for efficiency
+    const [
+      title,
+      description,
+      owner,
+      artist,
+      commissionHub,
+      tokenUriData,
+      // Additional calls can be added here
+    ] = await Promise.all([
+      contract.getTitle(),
+      contract.getDescription(),
+      contract.getOwner(),
+      contract.getArtist(),
+      contract.getCommissionHubAddress(),
+      contract.getTokenURIData(),
+      // Additional calls can be added here
+    ]);
+    
+    // Get format info (this might not be directly available in the contract)
+    // This is often stored as a string like "webp", "png", etc.
+    // Default to a safe value if not available
+    let tokenUriFormat = "avif";  // Default format
+    try {
+      // Check if the contract has a method to get the format
+      if (contract.getTokenURIDataFormat) {
+        tokenUriFormat = await contract.getTokenURIDataFormat();
+      } else if (contract.getImageFormat) {
+        tokenUriFormat = await contract.getImageFormat();
+      }
+    } catch (error) {
+      console.warn(`Could not get token URI format for ${artPieceAddress}, using default:`, error);
+    }
+    
+    // Convert from ethers BytesLike to Uint8Array
+    let imageData: Uint8Array;
+    if (tokenUriData._isBigNumber) {
+      // Handle BigNumber format
+      imageData = ethers.toBeArray(tokenUriData);
+    } else if (typeof tokenUriData === 'string') {
+      // Handle hex string format
+      imageData = ethers.getBytes(tokenUriData);
+    } else {
+      // Handle array-like format
+      imageData = new Uint8Array(tokenUriData);
+    }
+    
+    return {
+      title,
+      description,
+      owner,
+      artist,
+      commissionHub,
+      tokenUriData: imageData,
+      tokenUriFormat,
+      contractAddress: artPieceAddress
+    };
+  } catch (error) {
+    console.error(`Error getting art piece data for ${artPieceAddress}:`, error);
+    throw error;
+  }
+}
+
 export default {
   getArtPieceTemplateContract,
   getArtPieceContract,
@@ -340,5 +425,6 @@ export default {
   createMinimalProxy,
   getArtPieceById,
   getArtPiecesByOwner,
-  createArtPiece
+  createArtPiece,
+  getArtPieceData
 }; 
