@@ -5,31 +5,10 @@ import config from './config';
 import { ethers } from 'ethers';
 import { hasProfile } from '../contracts/ProfileHubContract';
 import { setNetwork as setGlobalNetwork } from '../config/network';
-
-type NetworkType = 'animechain' | 'animechain_testnet' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
+import { mapLayerToNetwork, BlockchainNetworkType as NetworkType } from '../utils/networkUtils';
 
 // Authentication types
 export type AuthMethod = 'web3' | 'email' | 'none';
-
-// Map layer and environment to network type
-export const mapLayerToNetwork = (layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet'): NetworkType => {
-  // L1 networks: default Ethereum networks
-  if (layer === 'l1') {
-    return environment === 'testnet' ? 'testnet' : 'mainnet';
-  } 
-  // L2 networks: Arbitrum networks
-  else if (layer === 'l2') {
-    return environment === 'testnet' ? 'arbitrum_testnet' : 'arbitrum_mainnet';
-  } 
-  // L3 networks: AnimeChain networks
-  else if (layer === 'l3') {
-    return environment === 'testnet' ? 'animechain_testnet' : 'animechain';
-  } 
-  // Default fallback
-  else {
-    return environment === 'testnet' ? 'testnet' : 'mainnet';
-  }
-};
 
 interface BlockchainContextType {
   // Authentication state

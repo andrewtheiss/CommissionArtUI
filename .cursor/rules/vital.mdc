@@ -4,3 +4,6 @@ globs:
 alwaysApply: true
 ---
 Anytime a contract is called, whether it be a method or an API access, you need to verify the contract parameters in the latest version of the API, period. You also need to verify the contract's TS file to verify that the contract interface matches that ABI, and only after that should you call the contract with the correct parameters, period. If there's any conflict between the actual JSON ABI and the contract interface, the JSON ABI always takes precedence and is the source of truth, period. Quite often the JSON ABI will update, and so any new contract call should reference the ABI for verification of the latest contract call parameters.
+
+
+do not change anything else or make any other optimizations. please do not go beyond the scope of the request which is laid out in front or change any other method names, functionality or scope without first inquiring from the user.

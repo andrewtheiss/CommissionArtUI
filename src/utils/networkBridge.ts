@@ -1,5 +1,5 @@
 import { getNetwork, setNetwork as setGlobalNetwork, NetworkType as GlobalNetworkType } from '../config/network';
-import { mapLayerToNetwork } from '../contexts/BlockchainContext';
+import { mapLayerToNetwork } from './networkUtils';
 
 // Store the last synced network to avoid unnecessary updates
 let lastSyncedNetwork: GlobalNetworkType | null = null;
