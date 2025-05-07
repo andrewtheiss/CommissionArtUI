@@ -20,24 +20,35 @@ export function getProfileHubContract(
     throw new Error('ProfileHub contract address not found');
   }
   
-  if (!abi) {
-    throw new Error('ProfileHub contract ABI not found');
+  if (!abi || !Array.isArray(abi) || abi.length === 0) {
+    console.error('ProfileHub ABI issue detected:', {
+      abiExists: Boolean(abi),
+      isArray: Array.isArray(abi),
+      length: Array.isArray(abi) ? abi.length : 'N/A'
+    });
+    throw new Error('ProfileHub contract ABI is invalid or empty');
   }
   
   try {
     const currentNetwork = getNetwork();
+    
+    // Debug info about the ABI
+    const abiMethods = abi
+      .filter(item => item.type === 'function')
+      .map(item => item.name);
+    
     console.debug('Creating ProfileHub contract for network:', currentNetwork, {
       address,
       network: currentNetwork,
-      abiType: typeof abi,
-      isArray: Array.isArray(abi),
-      abiLength: Array.isArray(abi) ? abi.length : 'N/A'
+      abiMethods,
+      hasProfileMethod: abiMethods.includes('hasProfile'),
+      hasGetProfileMethod: abiMethods.includes('getProfile')
     });
     
     return new ethers.Contract(address, abi, providerOrSigner);
   } catch (error) {
     console.error('Failed to create ProfileHub contract:', error);
-    console.error('ABI details:', abi);
+    console.error('ABI details:', JSON.stringify(abi.slice(0, 3), null, 2)); // Show first 3 items
     throw error;
   }
 }
@@ -87,11 +98,37 @@ export async function hasProfile(
   provider: ethers.BrowserProvider | ethers.JsonRpcProvider | ethers.JsonRpcSigner
 ): Promise<boolean> {
   try {
+    if (!userAddress) {
+      console.warn('hasProfile called with empty address');
+      return false;
+    }
+    
+    console.debug(`Checking if user ${userAddress} has a profile`);
     const contract = getProfileHubContract(provider);
-    return await contract.hasProfile(userAddress);
+    
+    // Verify that the contract has the hasProfile method
+    if (!contract.hasProfile) {
+      console.error('hasProfile method not found on ProfileHub contract');
+      return false;
+    }
+    
+    const result = await contract.hasProfile(userAddress);
+    console.debug(`hasProfile result for ${userAddress}:`, result);
+    return result;
   } catch (error) {
     console.error(`Error checking if user ${userAddress} has a profile:`, error);
-    return false;
+    
+    // Try an alternative approach - getUserProfile
+    try {
+      console.debug(`Trying alternative method getProfile for ${userAddress}`);
+      const contract = getProfileHubContract(provider);
+      const profileAddress = await contract.getProfile(userAddress);
+      // If not zero address, user has a profile
+      return profileAddress !== ethers.ZeroAddress;
+    } catch (alternativeError) {
+      console.error('Alternative method also failed:', alternativeError);
+      return false;
+    }
   }
 }
 

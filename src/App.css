@@ -946,8 +946,74 @@ h2 {
 .profile-address {
   font-family: monospace;
   color: #ffffffaa;
-  font-size: 0.9rem;
-  word-break: break-all;
+  margin-bottom: 0.5rem;
+}
+
+.profile-contract-address {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-label {
+  font-size: 0.85rem;
+  color: #ffffffaa;
+  margin-right: 0.5rem;
+}
+
+.profile-contract-value {
+  font-family: monospace;
+  background-color: rgba(100, 108, 255, 0.15);
+  color: #646cff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-contract-value:hover {
+  background-color: rgba(100, 108, 255, 0.25);
+}
+
+.copy-icon {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.profile-contract-value:hover .copy-icon {
+  opacity: 1;
+}
+
+.copy-indicator {
+  position: absolute;
+  right: -60px;
+  font-size: 0.75rem;
+  background-color: #4a4a4a;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.profile-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .profile-content {

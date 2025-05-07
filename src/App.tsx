@@ -11,6 +11,12 @@ import AddArt from './pages/AddArt'
 import Footer from './components/Footer'
 import Profile from './pages/Profile'
 import ProfileStatusIndicator from './components/ProfileStatusIndicator'
+import { preloadCriticalABIs } from './utils/abi'
+
+// Preload critical ABIs to ensure they're available before they're needed
+preloadCriticalABIs().catch(error => {
+  console.error('Error preloading ABIs:', error);
+});
 
 // Network Status component that uses the blockchain context
 const NetworkStatus = () => {

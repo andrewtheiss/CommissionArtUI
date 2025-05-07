@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { hasProfile } from '../contracts/ProfileHubContract';
 import { setNetwork as setGlobalNetwork } from '../config/network';
 import { mapLayerToNetwork, BlockchainNetworkType as NetworkType } from '../utils/networkUtils';
+import { loadABI } from '../utils/abi';
 
 // Authentication types
 export type AuthMethod = 'web3' | 'email' | 'none';
@@ -215,6 +216,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      // Verify ABIs are loaded correctly
+      verifyContractABIs();
+      
       // Create a provider using the network RPC URL
       const provider = new ethers.JsonRpcProvider(network.rpcUrl);
       
@@ -228,6 +232,30 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   }, [isConnected, walletAddress, network.rpcUrl]);
+
+  // Helper function to verify ABIs are loaded correctly
+  const verifyContractABIs = () => {
+    try {
+      // Check ProfileHub ABI
+      const profileHubABI = loadABI('ProfileHub');
+      if (!profileHubABI || !Array.isArray(profileHubABI) || profileHubABI.length === 0) {
+        console.error('ProfileHub ABI not loaded correctly:', {
+          exists: Boolean(profileHubABI),
+          isArray: Array.isArray(profileHubABI),
+          length: Array.isArray(profileHubABI) ? profileHubABI.length : 'N/A'
+        });
+      } else {
+        console.debug('ProfileHub ABI loaded successfully:', {
+          methods: profileHubABI
+            .filter(item => item.type === 'function')
+            .map(item => item.name)
+            .slice(0, 5) // Just show first 5 methods to avoid log clutter
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying contract ABIs:', error);
+    }
+  };
 
   // Check for profile when wallet address or network changes
   useEffect(() => {

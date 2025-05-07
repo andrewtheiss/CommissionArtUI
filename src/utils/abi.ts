@@ -1,503 +1,228 @@
-// This is a placeholder until real ABIs are manually added
-// Import ABIs from their respective files
-// The commented imports will be uncommented once the ABI files are added
-/*
-import ArrayManagerABI from '../assets/abis/ArrayManager.json';
-import ArtPieceABI from '../assets/abis/ArtPiece.json';
-import ArtPieceOffChainABI from '../assets/abis/ArtPieceOffChain.json';
-import CommissionHubABI from '../assets/abis/CommissionHub.json';
-import L1QueryOwnerABI from '../assets/abis/L1QueryOwner.json';
-import L2RelayABI from '../assets/abis/L2Relay.json';
-import OwnerRegistryABI from '../assets/abis/OwnerRegistry.json';
-import ProfileABI from '../assets/abis/Profile.json';
-import ProfileHubABI from '../assets/abis/ProfileHub.json';
-import SimpleERC721ABI from '../assets/abis/SimpleERC721.json';
-*/
+/**
+ * Utility to dynamically load ABIs from the assets/abis folder
+ */
 
-// Temporary placeholder ABIs until real ones are added
-// These are minimal ABIs with basic ERC721 functions to allow the code to work
-const placeholderERC721ABI = [
-  // Basic ERC721 functions
-  {
-    "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
-    "name": "balanceOf",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-    "name": "ownerOf",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "uint256", "name": "index", "type": "uint256"}],
-    "name": "tokenOfOwnerByIndex",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // ArtPiece specific functions (placeholders)
-  {
-    "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-    "name": "getArtPiece",
-    "outputs": [
-      {
-        "components": [
-          {"internalType": "string", "name": "title", "type": "string"},
-          {"internalType": "string", "name": "description", "type": "string"},
-          {"internalType": "string", "name": "uri", "type": "string"},
-          {"internalType": "address", "name": "creator", "type": "address"},
-          {"internalType": "uint256", "name": "createdAt", "type": "uint256"}
-        ],
-        "internalType": "struct ArtPiece.ArtPieceData",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {"internalType": "string", "name": "title", "type": "string"},
-      {"internalType": "string", "name": "description", "type": "string"},
-      {"internalType": "string", "name": "uri", "type": "string"}
-    ],
-    "name": "createArtPiece",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Actual initialize function from the contract
-  {
-    "inputs": [
-      {"internalType": "bytes", "name": "_token_uri_data", "type": "bytes"},
-      {"internalType": "string", "name": "_token_uri_data_format", "type": "string"},
-      {"internalType": "string", "name": "_title_input", "type": "string"},
-      {"internalType": "string", "name": "_description_input", "type": "string"},
-      {"internalType": "address", "name": "_owner_input", "type": "address"},
-      {"internalType": "address", "name": "_artist_input", "type": "address"},
-      {"internalType": "address", "name": "_commission_hub", "type": "address"},
-      {"internalType": "bool", "name": "_ai_generated", "type": "bool"}
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Common functions for proxy contracts
-  {
-    "inputs": [],
-    "name": "initialized",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isInitialized",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
+// Type definition for ABI items
+interface ABIItem {
+  type: string;
+  name?: string;
+  inputs?: Array<{name: string; type: string; internalType?: string}>;
+  outputs?: Array<{name: string; type: string; internalType?: string}>;
+  stateMutability?: string;
+  anonymous?: boolean;
+  indexed?: boolean;
+}
 
-const placeholderCommissionHubABI = [
-  // Basic CommissionHub functions (placeholders)
-  {
-    "inputs": [],
-    "name": "getCommissions",
-    "outputs": [{"internalType": "uint256[]", "name": "", "type": "uint256[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "commissionId", "type": "uint256"}],
-    "name": "getCommissionDetails",
-    "outputs": [
-      {
-        "components": [
-          {"internalType": "address", "name": "client", "type": "address"},
-          {"internalType": "address", "name": "artist", "type": "address"},
-          {"internalType": "uint256", "name": "price", "type": "uint256"},
-          {"internalType": "uint8", "name": "status", "type": "uint8"},
-          {"internalType": "string", "name": "description", "type": "string"}
-        ],
-        "internalType": "struct CommissionHub.CommissionData",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
-
-// Placeholder ABI for Profile contract based on the provided Vyper code
-const placeholderProfileABI = [
-  // View functions
-  {
-    "inputs": [],
-    "name": "deployer",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "hub",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "profileImage",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "profileImageFormat",
-    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "commissionCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "unverifiedCommissionCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "myArtCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "likedProfileCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "linkedProfileCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "isArtist",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "artistCommissionedWorkCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "artistErc1155sToSellCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "artistProceedsAddress",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // Initialize function
-  {
-    "inputs": [{"internalType": "address", "name": "_owner", "type": "address"}],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Setter functions
-  {
-    "inputs": [{"internalType": "bool", "name": "_is_artist", "type": "bool"}],
-    "name": "setIsArtist",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_image", "type": "address"}],
-    "name": "setProfileImage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "string", "name": "_format", "type": "string"}],
-    "name": "setProfileImageFormat",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Art piece functions
-  {
-    "inputs": [{"internalType": "address", "name": "_art_piece", "type": "address"}],
-    "name": "addArtPiece",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_art_piece", "type": "address"}],
-    "name": "removeArtPiece",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
-    "name": "getArtPieces",
-    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
-    "name": "getRecentArtPieces",
-    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getLatestArtPieces",
-    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // Commission functions
-  {
-    "inputs": [{"internalType": "address", "name": "_commission", "type": "address"}],
-    "name": "addCommission",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_commission", "type": "address"}],
-    "name": "removeCommission",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
-    "name": "getCommissions",
-    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // Create art piece function
-  {
-    "inputs": [
-      {"internalType": "address", "name": "_art_piece_template", "type": "address"},
-      {"internalType": "bytes", "name": "_token_uri_data", "type": "bytes"},
-      {"internalType": "string", "name": "_token_uri_data_format", "type": "string"},
-      {"internalType": "string", "name": "_title", "type": "string"},
-      {"internalType": "string", "name": "_description", "type": "string"},
-      {"internalType": "bool", "name": "_is_artist", "type": "bool"},
-      {"internalType": "address", "name": "_other_party", "type": "address"},
-      {"internalType": "address", "name": "_commission_hub", "type": "address"},
-      {"internalType": "bool", "name": "_ai_generated", "type": "bool"}
-    ],
-    "name": "createArtPiece",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
-
-// Placeholder ABI for ProfileHub contract based on the provided Vyper code
-const placeholderProfileHubABI = [
-  // View functions
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "profileTemplate",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "name": "accountToProfile",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "userCount",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // Profile management functions
-  {
-    "inputs": [],
-    "name": "createProfile",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
-    "name": "getProfile",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
-    "name": "hasProfile",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "address", "name": "_new_template", "type": "address"}],
-    "name": "updateProfileTemplateContract",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"internalType": "uint256", "name": "_page_size", "type": "uint256"}, {"internalType": "uint256", "name": "_page_number", "type": "uint256"}],
-    "name": "getUserProfiles",
-    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  // Create art piece and register profile
-  {
-    "inputs": [
-      {"internalType": "address", "name": "_art_piece_template", "type": "address"},
-      {"internalType": "bytes", "name": "_token_uri_data", "type": "bytes"},
-      {"internalType": "string", "name": "_token_uri_data_format", "type": "string"},
-      {"internalType": "string", "name": "_title", "type": "string"},
-      {"internalType": "string", "name": "_description", "type": "string"},
-      {"internalType": "bool", "name": "_is_artist", "type": "bool"},
-      {"internalType": "address", "name": "_other_party", "type": "address"},
-      {"internalType": "address", "name": "_commission_hub", "type": "address"},
-      {"internalType": "bool", "name": "_ai_generated", "type": "bool"}
-    ],
-    "name": "createNewArtPieceAndRegisterProfile",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Create profile from contract
-  {
-    "inputs": [{"internalType": "address", "name": "_profile_contract", "type": "address"}],
-    "name": "createProfileFromContract",
-    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  // Events
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
-      {"indexed": true, "internalType": "address", "name": "profile", "type": "address"}
-    ],
-    "name": "ProfileCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "internalType": "address", "name": "profile", "type": "address"},
-      {"indexed": true, "internalType": "address", "name": "art_piece", "type": "address"},
-      {"indexed": true, "internalType": "address", "name": "user", "type": "address"}
-    ],
-    "name": "ArtPieceCreated",
-    "type": "event"
-  }
-];
-
-// Default placeholder for other contracts
-const placeholderABI: any[] = [];
-
-// Map of ABI names to their actual content
-const abiMap: { [key: string]: any[] } = {
-  // These will be replaced with real ABIs once files are added
-  'ArrayManager': placeholderABI,
-  'ArtPiece': placeholderERC721ABI,
-  'ArtPieceOffChain': placeholderABI,
-  'CommissionHub': placeholderCommissionHubABI,
-  'L1QueryOwner': placeholderABI,
-  'L2Relay': placeholderABI,
-  'OwnerRegistry': placeholderABI,
-  'Profile': placeholderProfileABI,
-  'ProfileHub': placeholderProfileHubABI,
-  'SimpleERC721': placeholderERC721ABI,
+// Type for the ABI cache
+type ABICache = {
+  [key: string]: ABIItem[]
 };
 
 /**
- * Get the list of available ABI names
- * @returns Array of available ABI names
+ * Cache for loaded ABIs to avoid repeated file loading
  */
-export const getAvailableABIs = (): string[] => {
-  return Object.keys(abiMap);
+const abiCache: ABICache = {};
+
+// Fallback ABIs for essential contracts to ensure application doesn't break
+const fallbackABIs: Record<string, ABIItem[]> = {
+  'ProfileHub': [
+    {
+      "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
+      "name": "hasProfile",
+      "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
+      "name": "getProfile",
+      "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "createProfile",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  'Profile': [
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isArtist",
+      "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "profileImage",
+      "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "profileImageFormat",
+      "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "commissionCount",
+      "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unverifiedCommissionCount",
+      "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "myArtCount",
+      "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "likedProfileCount",
+      "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "linkedProfileCount",
+      "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
 };
 
 /**
- * Load an ABI by name
- * @param abiName Name of the ABI to load
- * @returns The ABI object or null if not found
+ * Get all available ABI names from the assets/abis directory
+ * @returns Array of available ABI names (without .json extension)
  */
-export const loadABI = (abiName: string): any => {
-  if (!abiName || !abiMap[abiName]) {
-    console.error(`ABI '${abiName}' not found`);
+export const getAvailableABIs = async (): Promise<string[]> => {
+  try {
+    // Using Vite's glob import feature to get all JSON files in the directory
+    const abiModules = import.meta.glob('../assets/abis/*.json', { eager: true });
+    
+    // Extract filenames from the paths
+    return Object.keys(abiModules).map((path: string) => {
+      // Extract filename without extension from path
+      // Example: '../assets/abis/ArtPiece.json' -> 'ArtPiece'
+      const filename = path.split('/').pop() || '';
+      return filename.replace(/\.json$/, '');
+    });
+  } catch (error) {
+    console.error('Error loading available ABIs:', error);
+    
+    // Fallback: Try direct import of known contracts
+    // This is less dynamic but provides a safety net if glob fails
+    const knownContracts = [
+      'ArrayManager', 'ArtPiece', 'ArtPieceOffChain', 'CommissionHub',
+      'L1QueryOwner', 'L2Relay', 'OwnerRegistry', 'Profile', 'ProfileHub', 
+      'SimpleERC721', 'L3OwnerVerifier', 'L3OwnerRegistry', 'Registry',
+      'CommissionedArt', 'CommissionedArtData'
+    ];
+    
+    // Filter out any contracts that don't have corresponding files
+    const availableContracts: string[] = [];
+    for (const contract of knownContracts) {
+      try {
+        // Try to load the contract to see if it exists
+        await import(`../assets/abis/${contract}.json`);
+        availableContracts.push(contract);
+      } catch {
+        // Skip contracts that can't be imported
+      }
+    }
+    
+    return availableContracts;
+  }
+};
+
+/**
+ * Load an ABI by name (synchronous version)
+ * This is for backward compatibility with existing code
+ * @param abiName Name of the ABI to load (without .json extension)
+ * @returns The ABI object or fallback if not found
+ */
+export function loadABI(abiName: string): ABIItem[] {
+  if (!abiName) {
+    console.error('No ABI name provided');
+    return [];
+  }
+
+  // Return from cache if already loaded
+  if (abiCache[abiName]) {
+    return abiCache[abiName];
+  }
+
+  // If not in cache, load a fallback ABI with essential functions
+  // This ensures critical functions still work
+  console.warn(`Using fallback ABI for ${abiName} - dynamic loading was not awaited`);
+  
+  // Trigger async load for future use
+  loadABIAsync(abiName).then(abi => {
+    if (abi) {
+      // Update cache when async load completes
+      abiCache[abiName] = abi;
+    }
+  }).catch(error => {
+    console.error(`Async loading of ABI '${abiName}' failed:`, error);
+  });
+  
+  // Return fallback ABI or empty array if no fallback exists
+  return fallbackABIs[abiName] || [];
+}
+
+/**
+ * Load an ABI by name (async version)
+ * @param abiName Name of the ABI to load (without .json extension)
+ * @returns Promise resolving to the ABI object or null if not found
+ */
+export const loadABIAsync = async (abiName: string): Promise<ABIItem[] | null> => {
+  if (!abiName) {
+    console.error('No ABI name provided');
     return null;
   }
-  
-  return abiMap[abiName];
+
+  try {
+    // Return from cache if already loaded
+    if (abiCache[abiName]) {
+      return abiCache[abiName];
+    }
+
+    // Dynamically import the ABI file
+    const abiModule = await import(`../assets/abis/${abiName}.json`);
+    
+    // Store in cache for future use
+    const abi = abiModule.default || abiModule;
+    abiCache[abiName] = abi;
+    
+    return abi;
+  } catch (error) {
+    console.error(`Error loading ABI '${abiName}':`, error);
+    return null;
+  }
 };
 
 /**
@@ -505,13 +230,13 @@ export const loadABI = (abiName: string): any => {
  * @param abiName Name of the ABI to analyze
  * @returns Array of method names
  */
-export const getMethodNames = (abiName: string): string[] => {
-  const abi = loadABI(abiName);
+export const getMethodNames = async (abiName: string): Promise<string[]> => {
+  const abi = await loadABIAsync(abiName);
   if (!abi) return [];
   
   return abi
-    .filter((item: any) => item.type === 'function')
-    .map((item: any) => item.name);
+    .filter((item: ABIItem) => item.type === 'function' && item.name)
+    .map((item: ABIItem) => item.name as string);
 };
 
 /**
@@ -519,18 +244,52 @@ export const getMethodNames = (abiName: string): string[] => {
  * @param methodName Method name to search for
  * @returns Array of ABI names that contain the method
  */
-export const findABIsWithMethod = (methodName: string): string[] => {
-  return Object.keys(abiMap).filter(abiName => {
-    const abi = abiMap[abiName];
-    return abi.some((item: any) => 
+export const findABIsWithMethod = async (methodName: string): Promise<string[]> => {
+  const abiNames = await getAvailableABIs();
+  const result: string[] = [];
+  
+  for (const abiName of abiNames) {
+    const abi = await loadABIAsync(abiName);
+    if (abi && abi.some((item: ABIItem) => 
       item.type === 'function' && item.name === methodName
-    );
-  });
+    )) {
+      result.push(abiName);
+    }
+  }
+  
+  return result;
+};
+
+/**
+ * Preload important ABIs to ensure they're available before they're needed
+ * This function should be called early in the app startup
+ */
+export const preloadCriticalABIs = async (): Promise<void> => {
+  const criticalContracts = ['ProfileHub', 'Profile', 'CommissionHub', 'ArtPiece'];
+  
+  console.log('Preloading critical contract ABIs...');
+  
+  for (const contractName of criticalContracts) {
+    try {
+      const abi = await loadABIAsync(contractName);
+      if (abi && Array.isArray(abi) && abi.length > 0) {
+        // Store in cache
+        abiCache[contractName] = abi;
+        console.log(`Successfully preloaded ABI for ${contractName} (${abi.length} entries)`);
+      } else {
+        console.warn(`Failed to preload ABI for ${contractName}: Invalid ABI format`);
+      }
+    } catch (error) {
+      console.error(`Error preloading ABI for ${contractName}:`, error);
+    }
+  }
 };
 
 export default {
   getAvailableABIs,
   loadABI,
+  loadABIAsync,
   getMethodNames,
-  findABIsWithMethod
+  findABIsWithMethod,
+  preloadCriticalABIs
 }; 

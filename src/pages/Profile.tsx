@@ -53,6 +53,7 @@ const Profile: React.FC = () => {
   const [isLoadingArt, setIsLoadingArt] = useState(true);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [profileCreationError, setProfileCreationError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
   
   // Check if profile exists and get profile address
   useEffect(() => {
@@ -214,7 +215,13 @@ const Profile: React.FC = () => {
       const profileHubAddress = getContractAddress('profileHub');
       const profileHubABI = loadABI('ProfileHub');
       
-      if (!profileHubAddress || !profileHubABI) {
+      console.debug('ProfileHub contract info:', {
+        address: profileHubAddress,
+        abiExists: Boolean(profileHubABI),
+        abiLength: Array.isArray(profileHubABI) ? profileHubABI.length : 'N/A'
+      });
+      
+      if (!profileHubAddress || !profileHubABI || !Array.isArray(profileHubABI) || profileHubABI.length === 0) {
         throw new Error('ProfileHub contract address or ABI not found');
       }
       
@@ -230,7 +237,8 @@ const Profile: React.FC = () => {
       try {
         hasExistingProfile = await contract.hasProfile(userAddress);
       } catch (error) {
-      
+        console.warn('Error checking if user has profile:', error);
+        // Continue even if this check fails
       }
       
       if (hasExistingProfile) {
@@ -312,6 +320,22 @@ const Profile: React.FC = () => {
   // Determine if we should show the "Create Profile" button
   const showCreateProfileButton = isOwnProfile && hasUserProfile === false;
   
+  // Function to copy the profile address to clipboard
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess('Copied!');
+      
+      // Reset the "Copied!" message after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      setCopySuccess('Failed to copy');
+    }
+  };
+  
   // Show loading state
   if (isCheckingProfile || isLoading) {
     return (
@@ -364,6 +388,18 @@ const Profile: React.FC = () => {
           <div className="profile-details">
             <h1 className="profile-name">{profileData.name}</h1>
             <p className="profile-address">{profileData.owner}</p>
+            <div className="profile-contract-address">
+              <span className="profile-label">Profile Contract:</span>
+              <span 
+                className="profile-contract-value" 
+                title={copySuccess || "Click to copy address"}
+                onClick={() => profileAddress && copyToClipboard(profileAddress)}
+              >
+                {profileAddress ? `${profileAddress.substring(0, 8)}...${profileAddress.substring(36)}` : ''}
+                <span className="copy-icon">📋</span>
+                {copySuccess && <span className="copy-indicator">{copySuccess}</span>}
+              </span>
+            </div>
             <div className="profile-badges">
               {profileData.isArtist && <span className="artist-badge">Artist</span>}
             </div>
