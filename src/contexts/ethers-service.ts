@@ -128,6 +128,32 @@ class EthersService {
     return null;
   }
 
+  /**
+   * Revoke wallet permissions - effectively disconnects the dApp from the wallet
+   * Uses MetaMask's wallet_revokePermissions method
+   */
+  async revokeWalletPermissions(): Promise<boolean> {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      return false;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }]
+      });
+      
+      // Reset provider and signer
+      this.signer = null;
+      this.initProvider();
+      
+      return true;
+    } catch (error) {
+      console.error('Error revoking wallet permissions:', error);
+      return false;
+    }
+  }
+
   getProvider(): ethers.BrowserProvider | ethers.JsonRpcProvider | null {
     return this.provider;
   }

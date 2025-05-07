@@ -157,6 +157,8 @@ const AppContent = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const { switchToLayer, networkType, isConnected, isLoading, walletAddress } = useBlockchain();
   const [hasSynced, setHasSynced] = useState(false);
+  // Add state to track initial loading vs. connection attempts
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
   useEffect(() => {
     // Sync the global network setting with blockchain context on load
@@ -167,8 +169,16 @@ const AppContent = () => {
     }
   }, [switchToLayer, hasSynced]);
 
-  // Show a loading indicator while blockchain connection is initializing
-  if (isLoading) {
+  // Track when initial loading is complete
+  useEffect(() => {
+    if (!initialLoadComplete && !isLoading) {
+      setInitialLoadComplete(true);
+    }
+  }, [isLoading, initialLoadComplete]);
+
+  // Only show loading indicator during initial blockchain connection
+  // Not during subsequent wallet connection attempts
+  if (isLoading && !initialLoadComplete) {
     return (
       <div className="app-container loading-container">
         <div className="loader">Connecting to blockchain...</div>

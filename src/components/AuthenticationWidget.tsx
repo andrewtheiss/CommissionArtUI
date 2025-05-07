@@ -70,9 +70,8 @@ const AuthenticationWidget = () => {
         <button 
           className="connect-wallet-btn" 
           onClick={connectWallet}
-          disabled={isLoading}
         >
-          {isLoading ? 'Connecting...' : 'Connect Wallet'}
+          Connect Wallet
         </button>
         
         {showEmailForm ? (

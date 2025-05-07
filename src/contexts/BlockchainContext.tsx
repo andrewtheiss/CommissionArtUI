@@ -132,7 +132,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
 
   const connectWallet = useCallback(async () => {
     try {
-      setIsLoading(true);
+      // Don't set loading state to true, to avoid page transitions
       const signer = await ethersService.getSigner();
       if (signer) {
         const address = await signer.getAddress();
@@ -145,8 +145,6 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       setWalletAddress(null);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -177,12 +175,28 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const disconnect = useCallback(() => {
-    setIsConnected(false);
-    setAuthMethod('none');
-    setWalletAddress(null);
-    setEmailAddress(null);
-  }, []);
+  const disconnect = useCallback(async () => {
+    try {
+      // If connected via web3/wallet, use ethersService to revoke permissions
+      if (authMethod === 'web3') {
+        await ethersService.revokeWalletPermissions();
+      }
+      
+      // Reset context state
+      setIsConnected(false);
+      setAuthMethod('none');
+      setWalletAddress(null);
+      setEmailAddress(null);
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      
+      // Even if revocation fails, reset UI state
+      setIsConnected(false);
+      setAuthMethod('none');
+      setWalletAddress(null);
+      setEmailAddress(null);
+    }
+  }, [authMethod]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
