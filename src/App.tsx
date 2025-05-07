@@ -4,7 +4,7 @@ import './App.css'
 import Home from './pages/Home'
 import UpdateNFTOwnership from './pages/UpdateNFTOwnership'
 import WelcomeWidget from './components/WelcomeWidget'
-import { BlockchainProvider, useBlockchain } from './contexts/BlockchainContext'
+import { BlockchainProvider, useBlockchain, mapLayerToNetwork } from './contexts/BlockchainContext'
 import { syncNetworkWithBlockchain, setNetworkEverywhere } from './utils/networkBridge'
 import AddArt from './pages/AddArt'
 import Footer from './components/Footer'
@@ -12,7 +12,16 @@ import Profile from './pages/Profile'
 
 // Network Status component that uses the blockchain context
 const NetworkStatus = () => {
-  const { isConnected, isLoading, networkType, network, switchToLayer } = useBlockchain();
+  const { 
+    isConnected, 
+    isLoading, 
+    networkType, 
+    network, 
+    switchToLayer, 
+    connectWallet, 
+    disconnect, 
+    walletAddress 
+  } = useBlockchain();
   
   // Add console log to debug network type
   console.log('Current networkType:', networkType);
@@ -20,61 +29,124 @@ const NetworkStatus = () => {
   // Determine layer based on network type
   const getLayer = () => {
     if (networkType === 'animechain') return 'L3';
-    if (networkType === 'arbitrum_mainnet' || networkType === 'arbitrum_testnet') return 'L2';
-    if (networkType === 'testnet' || networkType === 'mainnet') return ''; // No layer for our networks
-    return 'L1';
+    if (networkType === 'animechain_testnet') return 'L3';
+    if (networkType === 'arbitrum_testnet') return 'L2';
+    if (networkType === 'arbitrum_mainnet') return 'L2';
+    return '';
   };
 
   const getNetworkDisplayName = () => {
-    // Use our network name from config for testnet and mainnet
-    if (networkType === 'testnet' || networkType === 'mainnet') {
-      return network.name;
+    // Custom network display names for clearer identification
+    if (networkType === 'animechain') {
+      return 'AnimeChain (Mainnet)';
+    }
+    if (networkType === 'animechain_testnet') {
+      return 'AnimeChain Testnet';
+    }
+    if (networkType === 'arbitrum_testnet') {
+      return 'Arbitrum Sepolia';
+    }
+    if (networkType === 'arbitrum_mainnet') {
+      return 'Arbitrum One';
     }
     
-    // For other networks, use the existing name + layer display
+    // For other networks, use the existing name from config
     return network.name;
   };
 
-  // Minimal toggle handler
-  const handleSwitch = (targetNetwork: 'testnet' | 'mainnet') => {
-    if (isLoading || 
-        (targetNetwork === 'testnet' && networkType.includes('testnet')) || 
-        (targetNetwork === 'mainnet' && (networkType.includes('mainnet') || networkType === 'animechain'))) {
+  // Enhanced handler for specific layer/environment combinations
+  const handleSwitchLayer = async (layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet') => {
+    if (isLoading) {
       return;
     }
-    console.log('Switching network from', networkType, 'to', targetNetwork);
-    setNetworkEverywhere(targetNetwork, switchToLayer);
+    
+    const targetNetwork = mapLayerToNetwork(layer, environment);
+    
+    // Skip if already on this network
+    if (networkType === targetNetwork) {
+      return;
+    }
+    
+    console.log(`Switching to ${environment} ${layer.toUpperCase()}: ${targetNetwork}`);
+    
+    // Switch network via context
+    switchToLayer(layer, environment);
+    
+    // If the user is already connected, attempt to reconnect to the new network
+    if (isConnected) {
+      console.log('User is connected, attempting to reconnect to the new network');
+      
+      // Give MetaMask time to switch networks before trying to reconnect
+      setTimeout(async () => {
+        try {
+          await connectWallet();
+          console.log('Successfully reconnected to the new network');
+        } catch (error) {
+          console.error('Failed to reconnect to the new network:', error);
+          // If reconnection fails, disconnect to maintain a consistent state
+          disconnect();
+        }
+      }, 1000); // Wait 1 second before trying to reconnect
+    }
   };
   
   // Determine which button should have the selected class
-  // Match any network type containing "testnet" as a testnet
-  const isTestnetSelected = networkType.includes('testnet');
-  // Match any network type containing "mainnet" or "animechain" as mainnet
-  const isMainnetSelected = networkType.includes('mainnet') || networkType === 'animechain';
+  const isMainnetSelected = networkType === 'animechain';
+  const isTestnetL2Selected = networkType === 'arbitrum_testnet';
+  const isTestnetL3Selected = networkType === 'animechain_testnet';
+  
+  // Handle wallet connection
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
+
+  // Handle wallet disconnection
+  const handleDisconnect = () => {
+    disconnect();
+  };
   
   return (
     <div className={isLoading ? "blockchain-status loading" : "blockchain-status"}>
-      <p style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <p style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         Network: <span className="network-name">{getNetworkDisplayName()}</span>
         {getLayer() && <span className="environment">{getLayer()}</span>}
         {!isConnected && <span className="disconnected"> (Disconnected)</span>}
-        {/* Radio-style network toggle */}
+        {/* Enhanced network toggle with L2/L3 options */}
         <span style={{ display: 'flex', gap: 0, marginLeft: 12 }}>
           <button
-            className={isTestnetSelected ? "network-radio-btn selected" : "network-radio-btn"}
-            disabled={isLoading || isTestnetSelected}
-            onClick={() => handleSwitch('testnet')}
+            className={isTestnetL2Selected ? "network-radio-btn selected" : "network-radio-btn"}
+            disabled={isLoading || isTestnetL2Selected}
+            onClick={() => handleSwitchLayer('l2', 'testnet')}
           >
-            Testnet
+            Testnet L2
+          </button>
+          <button
+            className={isTestnetL3Selected ? "network-radio-btn selected" : "network-radio-btn"}
+            disabled={isLoading || isTestnetL3Selected}
+            onClick={() => handleSwitchLayer('l3', 'testnet')}
+          >
+            Testnet L3
           </button>
           <button
             className={isMainnetSelected ? "network-radio-btn selected" : "network-radio-btn"}
             disabled={isLoading || isMainnetSelected}
-            onClick={() => handleSwitch('mainnet')}
+            onClick={() => switchToLayer('l3', 'mainnet')}
           >
             Mainnet
           </button>
         </span>
+        {/* Connect/Disconnect button */}
+        <button
+          className="network-action-btn"
+          disabled={isLoading}
+          onClick={isConnected ? handleDisconnect : handleConnectWallet}
+        >
+          {isConnected ? 'Disconnect' : 'Connect'}
+        </button>
       </p>
     </div>
   );
@@ -83,7 +155,7 @@ const NetworkStatus = () => {
 // Main app component that uses the network bridge
 const AppContent = () => {
   const [showWelcome, setShowWelcome] = useState(true);
-  const { switchToLayer, networkType, isConnected, isLoading } = useBlockchain();
+  const { switchToLayer, networkType, isConnected, isLoading, walletAddress } = useBlockchain();
   const [hasSynced, setHasSynced] = useState(false);
   
   useEffect(() => {
@@ -112,6 +184,7 @@ const AppContent = () => {
           <div className="header-links">
             <Link to="/add-art" className="header-link">Add Art</Link>
             <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
+            <Link to={`/profile/${walletAddress || ''}`} className="update-nft-button">Account</Link>
           </div>
         </div>
         

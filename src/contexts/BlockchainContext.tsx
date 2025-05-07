@@ -4,22 +4,28 @@ import { NetworkConfig } from './config';
 import config from './config';
 import { ethers } from 'ethers';
 
-type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
+type NetworkType = 'animechain' | 'animechain_testnet' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
 
 // Authentication types
 export type AuthMethod = 'web3' | 'email' | 'none';
 
 // Map layer and environment to network type
 export const mapLayerToNetwork = (layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet'): NetworkType => {
+  // L1 networks: default Ethereum networks
   if (layer === 'l1') {
-    return environment === 'testnet' ? 'dev' : 'prod';
-  } else if (layer === 'l2') {
+    return environment === 'testnet' ? 'testnet' : 'mainnet';
+  } 
+  // L2 networks: Arbitrum networks
+  else if (layer === 'l2') {
     return environment === 'testnet' ? 'arbitrum_testnet' : 'arbitrum_mainnet';
-  } else if (layer === 'l3') {
-    // L3 is Arbitrum in testnet but AnimeChain in mainnet
-    return environment === 'testnet' ? 'arbitrum_testnet' : 'animechain';
-  } else {
-    return 'animechain';
+  } 
+  // L3 networks: AnimeChain networks
+  else if (layer === 'l3') {
+    return environment === 'testnet' ? 'animechain_testnet' : 'animechain';
+  } 
+  // Default fallback
+  else {
+    return environment === 'testnet' ? 'testnet' : 'mainnet';
   }
 };
 

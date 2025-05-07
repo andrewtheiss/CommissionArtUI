@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import config, { NetworkConfig } from './config';
 
-type NetworkType = 'animechain' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
+type NetworkType = 'animechain' | 'animechain_testnet' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
 
 class EthersService {
   private provider: ethers.BrowserProvider | ethers.JsonRpcProvider | null = null;
@@ -65,6 +65,9 @@ class EthersService {
     // If we have a provider with switching capability, try to switch
     if (this.provider instanceof ethers.BrowserProvider && window.ethereum) {
       this.requestNetworkSwitch(network);
+    } else {
+      // If provider is not BrowserProvider, create a new provider with the new network's RPC URL
+      this.provider = new ethers.JsonRpcProvider(network.rpcUrl);
     }
 
     return network;
@@ -76,14 +79,17 @@ class EthersService {
     const chainIdHex = `0x${network.chainId.toString(16)}`;
     
     try {
+      // First try to just switch to the network
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: chainIdHex }],
       });
+      console.log(`Successfully switched to network: ${network.name}`);
     } catch (switchError: any) {
       // This error code indicates that the chain has not been added to MetaMask
       if (switchError.code === 4902) {
         try {
+          console.log(`Network ${network.name} not found in wallet, attempting to add it...`);
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [
@@ -100,11 +106,12 @@ class EthersService {
               },
             ],
           });
+          console.log(`Successfully added network: ${network.name}`);
         } catch (addError) {
-          console.error('Error adding chain:', addError);
+          console.error(`Error adding chain ${network.name}:`, addError);
         }
       } else {
-        console.error('Error switching chain:', switchError);
+        console.error(`Error switching to chain ${network.name}:`, switchError);
       }
     }
   }
