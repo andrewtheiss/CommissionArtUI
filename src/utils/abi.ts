@@ -136,25 +136,327 @@ const placeholderCommissionHubABI = [
   }
 ];
 
+// Placeholder ABI for Profile contract based on the provided Vyper code
 const placeholderProfileABI = [
-  // Basic Profile functions (placeholders)
+  // View functions
   {
-    "inputs": [{"internalType": "address", "name": "user", "type": "address"}],
-    "name": "getProfile",
-    "outputs": [
-      {
-        "components": [
-          {"internalType": "string", "name": "name", "type": "string"},
-          {"internalType": "string", "name": "bio", "type": "string"},
-          {"internalType": "string", "name": "avatarUri", "type": "string"}
-        ],
-        "internalType": "struct Profile.ProfileData",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
+    "inputs": [],
+    "name": "deployer",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "hub",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "profileImage",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "profileImageFormat",
+    "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "commissionCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unverifiedCommissionCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "myArtCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "likedProfileCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "linkedProfileCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isArtist",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "artistCommissionedWorkCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "artistErc1155sToSellCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "artistProceedsAddress",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // Initialize function
+  {
+    "inputs": [{"internalType": "address", "name": "_owner", "type": "address"}],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // Setter functions
+  {
+    "inputs": [{"internalType": "bool", "name": "_is_artist", "type": "bool"}],
+    "name": "setIsArtist",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_image", "type": "address"}],
+    "name": "setProfileImage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "string", "name": "_format", "type": "string"}],
+    "name": "setProfileImageFormat",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // Art piece functions
+  {
+    "inputs": [{"internalType": "address", "name": "_art_piece", "type": "address"}],
+    "name": "addArtPiece",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_art_piece", "type": "address"}],
+    "name": "removeArtPiece",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
+    "name": "getArtPieces",
+    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
+    "name": "getRecentArtPieces",
+    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLatestArtPieces",
+    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // Commission functions
+  {
+    "inputs": [{"internalType": "address", "name": "_commission", "type": "address"}],
+    "name": "addCommission",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_commission", "type": "address"}],
+    "name": "removeCommission",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_page", "type": "uint256"}, {"internalType": "uint256", "name": "_page_size", "type": "uint256"}],
+    "name": "getCommissions",
+    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // Create art piece function
+  {
+    "inputs": [
+      {"internalType": "address", "name": "_art_piece_template", "type": "address"},
+      {"internalType": "bytes", "name": "_token_uri_data", "type": "bytes"},
+      {"internalType": "string", "name": "_token_uri_data_format", "type": "string"},
+      {"internalType": "string", "name": "_title", "type": "string"},
+      {"internalType": "string", "name": "_description", "type": "string"},
+      {"internalType": "bool", "name": "_is_artist", "type": "bool"},
+      {"internalType": "address", "name": "_other_party", "type": "address"},
+      {"internalType": "address", "name": "_commission_hub", "type": "address"},
+      {"internalType": "bool", "name": "_ai_generated", "type": "bool"}
+    ],
+    "name": "createArtPiece",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
+
+// Placeholder ABI for ProfileHub contract based on the provided Vyper code
+const placeholderProfileHubABI = [
+  // View functions
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "profileTemplate",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "name": "accountToProfile",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "userCount",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // Profile management functions
+  {
+    "inputs": [],
+    "name": "createProfile",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
+    "name": "getProfile",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_user", "type": "address"}],
+    "name": "hasProfile",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "_new_template", "type": "address"}],
+    "name": "updateProfileTemplateContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "_page_size", "type": "uint256"}, {"internalType": "uint256", "name": "_page_number", "type": "uint256"}],
+    "name": "getUserProfiles",
+    "outputs": [{"internalType": "address[]", "name": "", "type": "address[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // Create art piece and register profile
+  {
+    "inputs": [
+      {"internalType": "address", "name": "_art_piece_template", "type": "address"},
+      {"internalType": "bytes", "name": "_token_uri_data", "type": "bytes"},
+      {"internalType": "string", "name": "_token_uri_data_format", "type": "string"},
+      {"internalType": "string", "name": "_title", "type": "string"},
+      {"internalType": "string", "name": "_description", "type": "string"},
+      {"internalType": "bool", "name": "_is_artist", "type": "bool"},
+      {"internalType": "address", "name": "_other_party", "type": "address"},
+      {"internalType": "address", "name": "_commission_hub", "type": "address"},
+      {"internalType": "bool", "name": "_ai_generated", "type": "bool"}
+    ],
+    "name": "createNewArtPieceAndRegisterProfile",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // Create profile from contract
+  {
+    "inputs": [{"internalType": "address", "name": "_profile_contract", "type": "address"}],
+    "name": "createProfileFromContract",
+    "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // Events
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "user", "type": "address"},
+      {"indexed": true, "internalType": "address", "name": "profile", "type": "address"}
+    ],
+    "name": "ProfileCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "internalType": "address", "name": "profile", "type": "address"},
+      {"indexed": true, "internalType": "address", "name": "art_piece", "type": "address"},
+      {"indexed": true, "internalType": "address", "name": "user", "type": "address"}
+    ],
+    "name": "ArtPieceCreated",
+    "type": "event"
   }
 ];
 
@@ -172,7 +474,7 @@ const abiMap: { [key: string]: any[] } = {
   'L2Relay': placeholderABI,
   'OwnerRegistry': placeholderABI,
   'Profile': placeholderProfileABI,
-  'ProfileHub': placeholderABI,
+  'ProfileHub': placeholderProfileHubABI,
   'SimpleERC721': placeholderERC721ABI,
 };
 

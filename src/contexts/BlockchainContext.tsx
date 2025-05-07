@@ -3,6 +3,8 @@ import ethersService from './ethers-service';
 import { NetworkConfig } from './config';
 import config from './config';
 import { ethers } from 'ethers';
+import { hasProfile } from '../contracts/ProfileHubContract';
+import { setNetwork as setGlobalNetwork } from '../config/network';
 
 type NetworkType = 'animechain' | 'animechain_testnet' | 'dev' | 'prod' | 'local' | 'arbitrum_testnet' | 'arbitrum_mainnet' | 'testnet' | 'mainnet';
 
@@ -49,6 +51,10 @@ interface BlockchainContextType {
   
   // General methods
   disconnect: () => void;
+
+  // Profile status
+  hasUserProfile: boolean | null;
+  checkUserProfile: () => Promise<boolean>;
 }
 
 const BlockchainContext = createContext<BlockchainContextType | undefined>(undefined);
@@ -67,6 +73,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
   
   // Email authentication state
   const [emailAddress, setEmailAddress] = useState<string | null>(null);
+
+  // Profile status
+  const [hasUserProfile, setHasUserProfile] = useState<boolean | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,6 +125,17 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         setAuthMethod('web3');
       }
     });
+    
+    // Reset profile status when network changes
+    setHasUserProfile(null);
+    
+    // Update global network state
+    // Map the BlockchainContext NetworkType to the global NetworkType
+    if (newNetworkType === 'mainnet' || newNetworkType === 'arbitrum_mainnet' || newNetworkType === 'animechain') {
+      setGlobalNetwork('mainnet');
+    } else {
+      setGlobalNetwork('testnet');
+    }
   }, [networkType]);
 
   const switchToLayer = useCallback((layer: 'l1' | 'l2' | 'l3', environment: 'testnet' | 'mainnet') => {
@@ -127,6 +147,11 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     }
     
     console.log(`Switching to layer ${layer} (${environment}) => network ${targetNetwork}`);
+    
+    // Update global network state directly
+    setGlobalNetwork(environment);
+    
+    // Then switch the blockchain network
     switchNetwork(targetNetwork);
   }, [networkType, switchNetwork]);
 
@@ -139,6 +164,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
         setWalletAddress(address);
         setIsConnected(true);
         setAuthMethod('web3');
+        
+        // Reset profile status when wallet changes
+        setHasUserProfile(null);
         return;
       }
       throw new Error('No wallet connected');
@@ -187,6 +215,7 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setAuthMethod('none');
       setWalletAddress(null);
       setEmailAddress(null);
+      setHasUserProfile(null);
     } catch (error) {
       console.error('Error disconnecting wallet:', error);
       
@@ -195,8 +224,40 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
       setAuthMethod('none');
       setWalletAddress(null);
       setEmailAddress(null);
+      setHasUserProfile(null);
     }
   }, [authMethod]);
+
+  // Function to check if the user has a profile
+  const checkUserProfile = useCallback(async (): Promise<boolean> => {
+    if (!isConnected || !walletAddress) {
+      setHasUserProfile(null);
+      return false;
+    }
+
+    try {
+      // Create a provider using the network RPC URL
+      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
+      
+      // Check if the user has a profile
+      const profileExists = await hasProfile(walletAddress, provider);
+      setHasUserProfile(profileExists);
+      return profileExists;
+    } catch (error) {
+      console.error('Error checking profile status:', error);
+      setHasUserProfile(false);
+      return false;
+    }
+  }, [isConnected, walletAddress, network.rpcUrl]);
+
+  // Check for profile when wallet address or network changes
+  useEffect(() => {
+    if (isConnected && walletAddress) {
+      checkUserProfile();
+    } else {
+      setHasUserProfile(null);
+    }
+  }, [isConnected, walletAddress, network, checkUserProfile]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
@@ -218,7 +279,11 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     emailAddress,
     
     // General methods
-    disconnect
+    disconnect,
+
+    // Profile status
+    hasUserProfile,
+    checkUserProfile
   }), [
     isConnected, 
     isLoading, 
@@ -231,7 +296,9 @@ export const BlockchainProvider = ({ children }: { children: ReactNode }) => {
     walletAddress, 
     connectWithEmail, 
     emailAddress, 
-    disconnect
+    disconnect,
+    hasUserProfile,
+    checkUserProfile
   ]);
 
   return (

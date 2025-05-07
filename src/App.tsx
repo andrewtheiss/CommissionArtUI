@@ -9,6 +9,7 @@ import { syncNetworkWithBlockchain, setNetworkEverywhere } from './utils/network
 import AddArt from './pages/AddArt'
 import Footer from './components/Footer'
 import Profile from './pages/Profile'
+import ProfileStatusIndicator from './components/ProfileStatusIndicator'
 
 // Network Status component that uses the blockchain context
 const NetworkStatus = () => {
@@ -194,7 +195,12 @@ const AppContent = () => {
           <div className="header-links">
             <Link to="/add-art" className="header-link">Add Art</Link>
             <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
-            <Link to={`/profile/${walletAddress || ''}`} className="update-nft-button">Account</Link>
+            <div className="account-link-container">
+              <Link to={`/profile/${walletAddress || ''}`} className="update-nft-button">
+                Account
+              </Link>
+              <ProfileStatusIndicator />
+            </div>
           </div>
         </div>
         

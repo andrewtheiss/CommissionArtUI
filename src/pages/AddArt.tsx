@@ -1,9 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { compressImage, fileToDataUrl, getImageInfo, dataUrlToByteArray, CompressionResult } from '../utils/imageCompression';
 import { useArtPieceTemplateContract, createArtPiece } from '../contracts/ArtPieceContract';
 import { useBlockchain } from '../contexts/BlockchainContext';
 import { ethers } from 'ethers';
+import { getUserProfile, createNewArtPieceAndRegisterProfile } from '../contracts/ProfileHubContract';
+import { getContractAddress } from '../utils/contracts';
 
 interface ArtFormData {
   title: string;
@@ -14,7 +16,7 @@ interface ArtFormData {
 
 const AddArt: React.FC = () => {
   // Blockchain integration
-  const { isConnected, walletAddress, network } = useBlockchain();
+  const { isConnected, walletAddress, network, hasUserProfile, checkUserProfile } = useBlockchain();
   const artPieceTemplateContract = useArtPieceTemplateContract();
 
   // Form state
@@ -22,6 +24,10 @@ const AddArt: React.FC = () => {
     title: '',
     description: ''
   });
+
+  // Profile state
+  const [userProfileAddress, setUserProfileAddress] = useState<string | null>(null);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(false);
 
   // Image state
   const [isDragging, setIsDragging] = useState(false);
@@ -42,6 +48,39 @@ const AddArt: React.FC = () => {
   const [aiGenerated, setAiGenerated] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Check if the user has a profile
+  useEffect(() => {
+    const fetchProfileAddress = async () => {
+      if (!isConnected || !walletAddress) {
+        setUserProfileAddress(null);
+        return;
+      }
+
+      setIsCheckingProfile(true);
+      
+      try {
+        // Create a provider
+        const provider = new ethers.JsonRpcProvider(network.rpcUrl);
+        
+        // Get profile address from ProfileHub
+        const profileAddr = await getUserProfile(walletAddress, provider);
+        setUserProfileAddress(profileAddr);
+      } catch (error) {
+        console.error('Error checking user profile address:', error);
+        setUserProfileAddress(null);
+      } finally {
+        setIsCheckingProfile(false);
+      }
+    };
+    
+    fetchProfileAddress();
+    
+    // Also refresh the profile status in the blockchain context
+    if (isConnected) {
+      checkUserProfile();
+    }
+  }, [isConnected, walletAddress, network.rpcUrl, checkUserProfile]);
   
   // Handle file selection from input or drop
   const handleFileSelect = async (file: File) => {
@@ -192,7 +231,9 @@ const AddArt: React.FC = () => {
         description: formData.description,
         imageFormat: formData.format || 'webp',
         imageDataSize: formData.imageData.length,
-        aiGenerated
+        aiGenerated,
+        hasProfile: hasUserProfile,
+        profileAddress: userProfileAddress
       });
       
       try {
@@ -200,24 +241,71 @@ const AddArt: React.FC = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         
-        // Use the createArtPiece function from our contract module
-        // This will clone the template and initialize it with the actual image data
-        const { tx, contractAddress: newContractAddress } = await createArtPiece(
-          formData.title,
-          formData.description || '',
-          formData.imageData,
-          formData.format || 'webp',
-          signer,
-          aiGenerated
-        );
+        let tx;
+        let newContractAddress;
+        
+        // Get the art piece template address
+        const artPieceTemplateAddress = getContractAddress('artPiece');
+        
+        // Format the image data properly for Ethereum contract call
+        // Convert Uint8Array to bytes format using ethers.getBytes
+        const formattedImageData = ethers.hexlify(formData.imageData);
+        
+        // Whether the user has a profile or not, we can use the ProfileHub's combined method
+        // This is more efficient as it handles both cases in a single transaction
+        if (hasUserProfile !== null) {
+          console.log('Using ProfileHub to create art piece');
+          
+          // Use the ProfileHub contract to create the art piece (and profile if needed)
+          const result = await createNewArtPieceAndRegisterProfile(
+            artPieceTemplateAddress,
+            formattedImageData, // Use formatted image data
+            formData.format || 'webp',
+            formData.title,
+            formData.description || '',
+            true, // isArtist
+            ethers.ZeroAddress, // otherParty
+            ethers.ZeroAddress, // commissionHub
+            aiGenerated,
+            signer
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.artPieceAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+          
+          // Update profile status
+          await checkUserProfile();
+          
+          console.log('Art piece created successfully through ProfileHub');
+        }
+        // Fallback to the original method if profile status is unknown
+        else {
+          console.log('Creating art piece without profile integration');
+          
+          const result = await createArtPiece(
+            formData.title,
+            formData.description || '',
+            formattedImageData, // Use formatted image data
+            formData.format || 'webp',
+            signer,
+            aiGenerated
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.contractAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+        }
         
         console.log('Transaction sent:', tx.hash);
         setTxHash(tx.hash);
         setContractAddress(newContractAddress);
         
-        // Wait for transaction confirmation
-        const receipt = await tx.wait();
-        console.log('Transaction confirmed:', receipt);
+        console.log('Transaction confirmed');
         
         setSaveSuccess(true);
         
@@ -264,6 +352,16 @@ const AddArt: React.FC = () => {
           {!isConnected && (
             <div className="wallet-warning">
               Please connect your wallet to save artwork to the blockchain
+            </div>
+          )}
+          {isConnected && hasUserProfile === true && (
+            <div className="profile-info success">
+              Your artwork will be added to your profile automatically
+            </div>
+          )}
+          {isConnected && hasUserProfile === false && (
+            <div className="profile-info warning">
+              A profile will be created for you when you save your artwork
             </div>
           )}
         </div>
