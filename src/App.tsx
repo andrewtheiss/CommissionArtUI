@@ -8,6 +8,7 @@ import { BlockchainProvider, useBlockchain } from './contexts/BlockchainContext'
 import { syncNetworkWithBlockchain, setNetworkEverywhere } from './utils/networkBridge'
 import AddArt from './pages/AddArt'
 import Footer from './components/Footer'
+import Profile from './pages/Profile'
 
 // Network Status component that uses the blockchain context
 const NetworkStatus = () => {
@@ -120,6 +121,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/update-nft" element={<UpdateNFTOwnership />} />
           <Route path="/add-art" element={<AddArt />} />
+          <Route path="/profile/:address" element={<Profile />} />
         </Routes>
         
         <WelcomeWidget visible={showWelcome} onClose={() => setShowWelcome(false)} />

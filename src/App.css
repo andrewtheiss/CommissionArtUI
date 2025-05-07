@@ -861,3 +861,237 @@ h2 {
 .form-actions .back-link {
   margin-top: 0; /* Remove individual button margins inside form-actions */
 }
+
+/* Profile Page Styles */
+.profile-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-info-section {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.profile-image-container {
+  flex-shrink: 0;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #535bf2;
+  box-shadow: 0 4px 10px rgba(83, 91, 242, 0.3);
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-details {
+  flex-grow: 1;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffffde;
+  margin-bottom: 10px;
+}
+
+.profile-badges {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.artist-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #535bf2;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.profile-address {
+  font-family: monospace;
+  color: #ffffffaa;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.profile-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.art-gallery-section {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.art-gallery-section h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #ffffffde;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.art-gallery-section h2:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #535bf2, #4349c0);
+  border-radius: 2px;
+}
+
+.art-gallery-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #ffffffaa;
+}
+
+.no-art-message {
+  text-align: center;
+  padding: 40px 0;
+  color: #ffffffaa;
+  font-style: italic;
+}
+
+.art-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.art-item {
+  background-color: #252525;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #333;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.art-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.art-image-container {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.art-item:hover .art-image {
+  transform: scale(1.05);
+}
+
+.art-details {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.art-title {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #ffffffde;
+}
+
+.art-description {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: #ffffffaa;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.art-address {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #535bf2;
+  margin: 0;
+}
+
+/* Responsive layouts */
+@media (max-width: 768px) {
+  .profile-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-info-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-image-container {
+    margin: 0 auto 20px;
+  }
+  
+  .art-gallery-section h2:after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 480px) {
+  .art-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-header {
+    padding: 20px;
+  }
+  
+  .profile-name {
+    font-size: 1.5rem;
+  }
+}
