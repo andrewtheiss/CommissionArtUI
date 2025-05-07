@@ -219,7 +219,32 @@ export async function createNewArtPieceAndRegisterProfile(
   try {
     const contract = getProfileHubContract(signer);
     
-    // Call the contract function
+    // Estimate gas first
+    console.log('Estimating gas for createNewArtPieceAndRegisterProfile...');
+    let estimatedGas;
+    try {
+      estimatedGas = await contract.createNewArtPieceAndRegisterProfile.estimateGas(
+        artPieceTemplate,
+        tokenUriData,
+        tokenUriDataFormat,
+        title,
+        description,
+        isArtist,
+        otherParty || ethers.ZeroAddress,
+        commissionHub || ethers.ZeroAddress,
+        aiGenerated
+      );
+      
+      // Add a 20% buffer to the estimated gas
+      estimatedGas = Math.floor(Number(estimatedGas) * 1.2);
+      console.log(`Estimated gas with buffer: ${estimatedGas}`);
+    } catch (estimateError) {
+      console.warn('Gas estimation failed, using safe default:', estimateError);
+      // Use a safe default if estimation fails
+      estimatedGas = 1500000; // 1.5 million gas units as a fallback (higher than profile because it also creates a profile)
+    }
+    
+    // Call the contract function with our gas estimate
     const tx = await contract.createNewArtPieceAndRegisterProfile(
       artPieceTemplate,
       tokenUriData,
@@ -230,7 +255,7 @@ export async function createNewArtPieceAndRegisterProfile(
       otherParty || ethers.ZeroAddress,
       commissionHub || ethers.ZeroAddress,
       aiGenerated,
-      { gasLimit: 3000000 }  // Higher gas limit for image data
+      { gasLimit: estimatedGas }
     );
     
     // Wait for the transaction to be mined

@@ -6,6 +6,7 @@ import { useBlockchain } from '../contexts/BlockchainContext';
 import { ethers } from 'ethers';
 import { getUserProfile, createNewArtPieceAndRegisterProfile } from '../contracts/ProfileHubContract';
 import { getContractAddress } from '../utils/contracts';
+import { createArtPieceOnProfile } from '../contracts/ProfileContract';
 
 interface ArtFormData {
   title: string;
@@ -247,19 +248,41 @@ const AddArt: React.FC = () => {
         // Get the art piece template address
         const artPieceTemplateAddress = getContractAddress('artPiece');
         
-        // Format the image data properly for Ethereum contract call
-        // Convert Uint8Array to bytes format using ethers.getBytes
-        const formattedImageData = ethers.hexlify(formData.imageData);
-        
-        // Whether the user has a profile or not, we can use the ProfileHub's combined method
-        // This is more efficient as it handles both cases in a single transaction
-        if (hasUserProfile !== null) {
-          console.log('Using ProfileHub to create art piece');
+        // If user has a profile, call createArtPiece on the profile contract
+        if (hasUserProfile === true && userProfileAddress) {
+          console.log('Using Profile contract to create art piece');
           
-          // Use the ProfileHub contract to create the art piece (and profile if needed)
+          // Use the Profile contract to create the art piece
+          const result = await createArtPieceOnProfile(
+            userProfileAddress,
+            artPieceTemplateAddress,
+            formData.imageData, // Use original Uint8Array
+            formData.format || 'webp',
+            formData.title,
+            formData.description || '',
+            true, // isArtist
+            ethers.ZeroAddress, // otherParty
+            ethers.ZeroAddress, // commissionHub
+            aiGenerated,
+            signer
+          );
+          
+          tx = result.tx;
+          newContractAddress = result.artPieceAddress;
+          
+          // Wait for the transaction to be mined
+          await tx.wait();
+          
+          console.log('Art piece created successfully through Profile contract');
+        }
+        // If user doesn't have a profile, use ProfileHub to create both
+        else if (hasUserProfile === false) {
+          console.log('Using ProfileHub to create art piece and profile');
+          
+          // Use the ProfileHub contract to create the art piece and profile
           const result = await createNewArtPieceAndRegisterProfile(
             artPieceTemplateAddress,
-            formattedImageData, // Use formatted image data
+            formData.imageData, // Use original Uint8Array
             formData.format || 'webp',
             formData.title,
             formData.description || '',
@@ -279,7 +302,7 @@ const AddArt: React.FC = () => {
           // Update profile status
           await checkUserProfile();
           
-          console.log('Art piece created successfully through ProfileHub');
+          console.log('Art piece and profile created successfully through ProfileHub');
         }
         // Fallback to the original method if profile status is unknown
         else {
@@ -288,7 +311,7 @@ const AddArt: React.FC = () => {
           const result = await createArtPiece(
             formData.title,
             formData.description || '',
-            formattedImageData, // Use formatted image data
+            formData.imageData, // Use original Uint8Array
             formData.format || 'webp',
             signer,
             aiGenerated

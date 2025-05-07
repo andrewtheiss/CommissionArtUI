@@ -244,6 +244,29 @@ export async function createArtPiece(
       const imageDataBytes = ethers.hexlify(imageData);
       
       // Call initialize with the correct parameters
+      console.log('Estimating gas for initialize...');
+      let estimatedGas;
+      try {
+        estimatedGas = await artPieceInstance.initialize.estimateGas(
+          imageData,              // _token_uri_data
+          imageFormat,            // _token_uri_data_format
+          title,                  // _title_input
+          description,            // _description_input
+          signerAddress,          // _owner_input
+          signerAddress,          // _artist_input
+          ethers.ZeroAddress,     // _commission_hub (null address for now)
+          aiGenerated             // _ai_generated
+        );
+        
+        // Add a 20% buffer to the estimated gas
+        estimatedGas = Math.floor(Number(estimatedGas) * 1.2);
+        console.log(`Estimated gas with buffer: ${estimatedGas}`);
+      } catch (estimateError) {
+        console.warn('Gas estimation failed, using safe default:', estimateError);
+        // Use a safe default if estimation fails
+        estimatedGas = 1000000; // 1 million gas units as a fallback
+      }
+      
       const initTx = await artPieceInstance.initialize(
         imageData,              // _token_uri_data
         imageFormat,                 // _token_uri_data_format
@@ -253,7 +276,7 @@ export async function createArtPiece(
         signerAddress,               // _artist_input
         ethers.ZeroAddress,          // _commission_hub (null address for now)
         aiGenerated,                 // _ai_generated
-        { gasLimit: 2000000 }        // Higher gas limit for image data
+        { gasLimit: estimatedGas }
       );
       
       console.log(`Initialization transaction sent: ${initTx.hash}`);
@@ -292,7 +315,7 @@ export async function createArtPiece(
         const initTx = await signer.sendTransaction({
           to: proxyAddress,
           data: initializeData,
-          gasLimit: 2000000  // Higher gas limit for image data
+          gasLimit: 1000000  // Safe default gas limit
         });
         
         console.log(`Direct initialization transaction sent: ${initTx.hash}`);

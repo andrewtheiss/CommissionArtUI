@@ -336,6 +336,109 @@ export async function setProfileImage(
   }
 }
 
+/**
+ * Create a new art piece through a profile contract
+ * @param profileAddress The address of the profile contract
+ * @param artPieceTemplate The address of the art piece template
+ * @param tokenUriData The token URI data
+ * @param tokenUriDataFormat The format of the token URI data
+ * @param title The title of the art piece
+ * @param description The description of the art piece
+ * @param isArtist Whether the caller is the artist
+ * @param otherParty The address of the other party (artist or commissioner)
+ * @param commissionHub The address of the commission hub
+ * @param aiGenerated Whether the art is AI generated
+ * @param signer The signer to use for the contract call
+ * @returns Promise resolving to the transaction response and art piece address
+ */
+export async function createArtPieceOnProfile(
+  profileAddress: string,
+  artPieceTemplate: string,
+  tokenUriData: Uint8Array,
+  tokenUriDataFormat: string,
+  title: string,
+  description: string,
+  isArtist: boolean,
+  otherParty: string,
+  commissionHub: string,
+  aiGenerated: boolean,
+  signer: ethers.JsonRpcSigner
+): Promise<{tx: ethers.TransactionResponse, artPieceAddress: string}> {
+  try {
+    const contract = getProfileContract(profileAddress, signer);
+    
+    // Estimate gas first
+    console.log('Estimating gas for createArtPiece...');
+    let estimatedGas;
+    try {
+      estimatedGas = await contract.createArtPiece.estimateGas(
+        artPieceTemplate,
+        tokenUriData,
+        tokenUriDataFormat,
+        title,
+        description,
+        isArtist,
+        otherParty || ethers.ZeroAddress,
+        commissionHub || ethers.ZeroAddress,
+        aiGenerated
+      );
+      
+      // Add a 20% buffer to the estimated gas
+      estimatedGas = Math.floor(Number(estimatedGas) * 1.2);
+      console.log(`Estimated gas with buffer: ${estimatedGas}`);
+    } catch (estimateError) {
+      console.warn('Gas estimation failed, using safe default:', estimateError);
+      // Use a safe default if estimation fails
+      estimatedGas = 1000000; // 1 million gas units as a fallback
+    }
+    
+    // Call the contract function with our gas estimate
+    const tx = await contract.createArtPiece(
+      artPieceTemplate,
+      tokenUriData,
+      tokenUriDataFormat,
+      title,
+      description,
+      isArtist,
+      otherParty || ethers.ZeroAddress,
+      commissionHub || ethers.ZeroAddress,
+      aiGenerated,
+      { gasLimit: estimatedGas }
+    );
+    
+    // Wait for the transaction to be mined
+    const receipt = await tx.wait();
+    
+    // Extract the art piece address from the event logs
+    let artPieceAddress = null;
+    
+    if (receipt && receipt.logs) {
+      // Find the relevant events
+      for (const log of receipt.logs) {
+        try {
+          const parsedLog = contract.interface.parseLog(log);
+          if (parsedLog && parsedLog.name === 'ArtPieceCreated') {
+            artPieceAddress = parsedLog.args.art_piece;
+            break;
+          }
+        } catch (e) {
+          // Skip logs that can't be parsed
+          continue;
+        }
+      }
+    }
+    
+    if (!artPieceAddress) {
+      console.warn('Could not extract art piece address from transaction logs');
+    }
+    
+    return { tx, artPieceAddress };
+  } catch (error) {
+    console.error(`Error creating art piece through profile ${profileAddress}:`, error);
+    throw error;
+  }
+}
+
 export default {
   getProfileTemplateContract,
   getProfileContract,
@@ -347,5 +450,6 @@ export default {
   getProfileCommissions,
   addArtPieceToProfile,
   setProfileArtistStatus,
-  setProfileImage
+  setProfileImage,
+  createArtPieceOnProfile
 }; 
