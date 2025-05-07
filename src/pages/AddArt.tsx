@@ -1,6 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { compressImage, fileToDataUrl, getImageInfo, dataUrlToByteArray, CompressionResult } from '../utils/imageCompression';
+import { useArtPieceTemplateContract, createArtPiece } from '../contracts/ArtPieceContract';
+import { useBlockchain } from '../contexts/BlockchainContext';
+import { ethers } from 'ethers';
 
 interface ArtFormData {
   title: string;
@@ -10,6 +13,10 @@ interface ArtFormData {
 }
 
 const AddArt: React.FC = () => {
+  // Blockchain integration
+  const { isConnected, walletAddress, network } = useBlockchain();
+  const artPieceTemplateContract = useArtPieceTemplateContract();
+
   // Form state
   const [formData, setFormData] = useState<ArtFormData>({
     title: '',
@@ -30,6 +37,9 @@ const AddArt: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [contractAddress, setContractAddress] = useState<string | null>(null);
+  const [aiGenerated, setAiGenerated] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -162,36 +172,74 @@ const AddArt: React.FC = () => {
       setError('Image is required');
       return;
     }
+
+    if (!isConnected || !walletAddress) {
+      setError('Please connect your wallet first');
+      return;
+    }
+    
+    if (!artPieceTemplateContract) {
+      setError('Contract template not available');
+      return;
+    }
     
     setIsSaving(true);
+    setError(null);
     
     try {
-      // This would normally be an API call to save the artwork
-      console.log('Saving artwork:', {
+      console.log('Saving artwork to blockchain:', {
         title: formData.title,
         description: formData.description,
-        imageFormat: formData.format,
-        imageDataByteLength: formData.imageData?.byteLength
+        imageFormat: formData.format || 'webp',
+        imageDataSize: formData.imageData.length,
+        aiGenerated
       });
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSaveSuccess(true);
-      
-      // Reset form after successful save
-      setTimeout(() => {
-        setFormData({
-          title: '',
-          description: ''
-        });
-        setSelectedFile(null);
-        setOriginalPreview(null);
-        setCompressedImage(null);
-        setOriginalInfo(null);
-        setSaveSuccess(false);
-      }, 3000);
-      
+      try {
+        // Get a provider with signer to make transactions
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        
+        // Use the createArtPiece function from our contract module
+        // This will clone the template and initialize it with the actual image data
+        const { tx, contractAddress: newContractAddress } = await createArtPiece(
+          formData.title,
+          formData.description || '',
+          formData.imageData,
+          formData.format || 'webp',
+          signer,
+          aiGenerated
+        );
+        
+        console.log('Transaction sent:', tx.hash);
+        setTxHash(tx.hash);
+        setContractAddress(newContractAddress);
+        
+        // Wait for transaction confirmation
+        const receipt = await tx.wait();
+        console.log('Transaction confirmed:', receipt);
+        
+        setSaveSuccess(true);
+        
+        // Reset form after successful save
+        setTimeout(() => {
+          setFormData({
+            title: '',
+            description: ''
+          });
+          setSelectedFile(null);
+          setOriginalPreview(null);
+          setCompressedImage(null);
+          setOriginalInfo(null);
+          setSaveSuccess(false);
+          setTxHash(null);
+          setContractAddress(null);
+          setAiGenerated(false);
+        }, 5000);
+      } catch (contractError) {
+        console.error('Contract interaction error:', contractError);
+        setError(`Contract error: ${contractError instanceof Error ? contractError.message : 'Unknown error'}`);
+      }
     } catch (err) {
       console.error('Error saving artwork:', err);
       setError('Failed to save artwork');
@@ -201,13 +249,23 @@ const AddArt: React.FC = () => {
   };
   
   // Determine if form is valid
-  const isFormValid = formData.title.trim() !== '' && !!formData.imageData;
+  const isFormValid = formData.title.trim() !== '' && !!formData.imageData && isConnected;
   
+  // Add AI generated checkbox
+  const handleAiGeneratedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAiGenerated(e.target.checked);
+  };
+
   return (
     <div className="add-art-page">
       <div className="add-art-container">
         <div className="add-art-header">
           <h2>Add Artwork</h2>
+          {!isConnected && (
+            <div className="wallet-warning">
+              Please connect your wallet to save artwork to the blockchain
+            </div>
+          )}
         </div>
         
         <form onSubmit={handleSubmit} className="add-art-form">
@@ -280,7 +338,27 @@ const AddArt: React.FC = () => {
             
             {saveSuccess && (
               <div className="compression-status success">
-                <span>Artwork saved successfully!</span>
+                <span>Artwork saved successfully to the blockchain!</span>
+                {txHash && (
+                  <a 
+                    href={`https://sepolia-explorer.arbitrum.io/tx/${txHash}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="tx-link"
+                  >
+                    View transaction
+                  </a>
+                )}
+                {contractAddress && (
+                  <a 
+                    href={`https://sepolia-explorer.arbitrum.io/address/${contractAddress}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="tx-link"
+                  >
+                    View contract
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -311,6 +389,17 @@ const AddArt: React.FC = () => {
               />
             </div>
             
+            <div className="form-group checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={aiGenerated}
+                  onChange={handleAiGeneratedChange}
+                />
+                AI Generated Artwork
+              </label>
+            </div>
+            
             <div className="form-actions">
               <Link to="/" className="back-link">Cancel</Link>
               <button
@@ -318,7 +407,7 @@ const AddArt: React.FC = () => {
                 className="submit-button"
                 disabled={!isFormValid || isCompressing || isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save Artwork'}
+                {isSaving ? 'Saving to Blockchain...' : 'Save Artwork'}
                 {isSaving && <span className="spinner"></span>}
               </button>
             </div>
