@@ -33,7 +33,7 @@ export const compressImage = async (
     quality: 0.8, 
     maxWidth: null, 
     maxHeight: null,
-    targetSizeKB: 44.7,
+    targetSizeKB: 40.7,
     autoOptimize: true
   }
 ): Promise<string | CompressionResult> => {
@@ -42,7 +42,7 @@ export const compressImage = async (
     quality = 0.8,
     maxWidth = null,
     maxHeight = null,
-    targetSizeKB = 44.7,
+    targetSizeKB = 40.7,
     autoOptimize = true
   } = options;
 
@@ -134,7 +134,7 @@ export const compressImage = async (
  */
 const optimizeImageForSize = async (
   input: File | Blob | string,
-  targetSizeKB: number = 44.7
+  targetSizeKB: number = 40.7
 ): Promise<CompressionResult> => {
   console.log(`Starting auto-optimization to target ${targetSizeKB}KB`);
   

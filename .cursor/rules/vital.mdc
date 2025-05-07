@@ -7,3 +7,5 @@ Anytime a contract is called, whether it be a method or an API access, you need 
 
 
 do not change anything else or make any other optimizations. please do not go beyond the scope of the request which is laid out in front or change any other method names, functionality or scope without first inquiring from the user.
+
+abi.ts file should DYNAMICALLY load the abis from the assets/abis folder instead of manually entering any data.  abi data changes often so having to update the abi.ts file is not desrable, especially when the abis .json files are programmatically generated at compile time.  never write out abi json or calls. always reference the json files
