@@ -12,6 +12,7 @@ import Footer from './components/Footer'
 import Profile from './pages/Profile'
 import ProfileStatusIndicator from './components/ProfileStatusIndicator'
 import { preloadCriticalABIs } from './utils/abi'
+import ArtDetail from './pages/ArtDetail'
 
 // Preload critical ABIs to ensure they're available before they're needed
 preloadCriticalABIs().catch(error => {
@@ -218,6 +219,7 @@ const AppContent = () => {
           <Route path="/update-nft" element={<UpdateNFTOwnership />} />
           <Route path="/add-art" element={<AddArt />} />
           <Route path="/profile/:address" element={<Profile />} />
+          <Route path="/myArt/:artId" element={<ArtDetail />} />
         </Routes>
         
         <WelcomeWidget visible={showWelcome} onClose={() => setShowWelcome(false)} />

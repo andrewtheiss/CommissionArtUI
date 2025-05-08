@@ -1,0 +1,451 @@
+.art-detail-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.art-detail-container.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 990;
+}
+
+.art-detail-content {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  z-index: 1000;
+}
+
+.modal .art-detail-content {
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+/* Main layout container */
+.art-detail-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Square/default layout (for both detail page and modal) */
+.art-detail-content.square .art-detail-main {
+  flex-direction: column;
+}
+
+.art-detail-content.square .art-detail-image {
+  width: 100%;
+  max-height: 80vh;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  background-color: #181818;
+  padding: 10px;
+}
+
+.art-detail-content.square .art-detail-info {
+  padding: 30px;
+}
+
+/* Portrait layout */
+.art-detail-content.portrait .art-detail-main {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.art-detail-content.portrait .art-detail-image {
+  width: 65%;
+  min-width: 600px;
+  max-height: 85vh;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #181818;
+  padding: 10px;
+}
+
+.art-detail-content.portrait .art-detail-info {
+  width: 35%;
+  padding: 30px;
+}
+
+/* Landscape layout */
+.art-detail-content.landscape .art-detail-main {
+  flex-direction: column;
+  gap: 0;
+}
+
+.art-detail-content.landscape .art-detail-image {
+  width: 100%;
+  max-height: 70vh;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  background-color: transparent;
+}
+
+.art-detail-content.landscape .art-detail-info {
+  padding-top: 20px;
+}
+
+/* Image container - applies to all layouts */
+.art-detail-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 600px;
+  background-color: #181818;
+  padding: 20px;
+  width: 100%;
+}
+
+.modal .art-detail-image {
+  min-height: 70vh;
+}
+
+.enhanced-art-display {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 600px;
+  min-height: 600px;
+}
+
+.art-detail-display {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.art-detail-display .art-image-container {
+  width: 100%;
+  min-height: 600px;
+  max-height: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  height: 100%;
+}
+
+/* Reset default image styles from ArtDisplay */
+.art-detail-display .art-image-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.art-detail-display .art-image {
+  min-width: min(600px, 100%);
+  min-height: 600px;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+}
+
+.art-detail-display .art-metadata {
+  display: none;
+}
+
+.art-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid #333;
+}
+
+.art-detail-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.back-button {
+  background-color: #535bf2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #4349ca;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1002;
+}
+
+.modal-close-button:hover {
+  color: #ff4757;
+}
+
+.art-detail-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: 800px;
+}
+
+.art-info-section {
+  margin-bottom: 15px;
+  overflow-y: auto;
+}
+
+.art-info-section h3 {
+  font-size: 1.3rem;
+  margin: 0 0 15px 0;
+  color: #ffffffde;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+}
+
+.art-info-section p {
+  margin: 10px 0;
+  color: #ffffffcc;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.art-detail-loading, .art-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  min-height: 400px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #535bf2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.art-detail-error h3 {
+  color: #ff4757;
+  margin-bottom: 10px;
+}
+
+.art-detail-error p {
+  margin-bottom: 20px;
+  color: #ffffffcc;
+}
+
+/* Improved media queries for responsive behavior */
+@media (max-width: 1200px) {
+  .art-detail-container {
+    padding: 10px;
+  }
+  
+  .art-detail-content.portrait .art-detail-image {
+    width: 60%;
+  }
+  
+  .art-detail-content.portrait .art-detail-info {
+    width: 40%;
+  }
+}
+
+@media (max-width: 900px) {
+  .enhanced-art-display,
+  .art-detail-display .art-image-container .art-image {
+    min-width: auto !important;
+    min-height: auto !important;
+    max-width: 100% !important;
+    max-height: 600px !important;
+  }
+  
+  .art-detail-content.portrait .art-detail-main {
+    flex-direction: column;
+  }
+  
+  .art-detail-content.portrait .art-detail-image,
+  .art-detail-content.portrait .art-detail-info {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .art-detail-image {
+    min-height: 300px;
+    max-height: 600px !important;
+  }
+  
+  .art-detail-content.portrait .art-detail-image,
+  .art-detail-content.square .art-detail-image,
+  .art-detail-content.landscape .art-detail-image {
+    max-height: 600px !important;
+  }
+  
+  .art-detail-display .art-image-container {
+    min-height: 300px;
+  }
+  
+  .enhanced-art-display {
+    max-width: 100%;
+    max-height: 600px;
+  }
+  
+  .art-detail-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .art-detail-container {
+    padding: 5px;
+  }
+  
+  .art-detail-header {
+    padding: 15px;
+  }
+  
+  .art-detail-content.portrait .art-detail-image,
+  .art-detail-content.square .art-detail-image,
+  .art-detail-content.landscape .art-detail-image {
+    max-height: 450px !important; 
+  }
+  
+  .enhanced-art-display,
+  .art-detail-display .art-image-container .art-image {
+    max-height: 450px !important;
+  }
+  
+  .art-detail-info {
+    padding: 15px;
+  }
+  
+  .art-info-section h3 {
+    font-size: 1.1rem;
+  }
+  
+  .art-info-section p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Force image to be visible and properly sized */
+.art-image {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Make sure the image is rendered at a good size - min 600px, max 800px */
+.art-detail-display .art-image-container .art-image {
+  min-width: 600px !important;
+  max-width: 800px !important;
+  min-height: 600px !important;
+  max-height: 800px !important;
+  object-fit: contain !important;
+  margin: 0 auto !important; /* Center the image horizontally */
+}
+
+/* Override any styles that might hide the image */
+.art-detail-display .art-image-container {
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Set appropriate container max-height for better layout */
+.art-detail-content.portrait .art-detail-image,
+.art-detail-content.square .art-detail-image,
+.art-detail-content.landscape .art-detail-image {
+  max-height: 850px !important; /* Allow some extra space for borders/padding */
+}
+
+/* Adjust modal sizes to ensure form is visible */
+.modal .art-detail-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Ensure the container doesn't stretch too much */
+.enhanced-art-display {
+  max-width: 800px;
+  max-height: 800px;
+  margin: 0 auto;
+}
+
+/* For landscape images, adjust the image container to be flush with edges */
+.art-detail-content.landscape .art-image-container {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+}
+
+/* Make sure ultra-wide images have proper display */
+.art-detail-content.landscape .art-detail-display .art-image {
+  margin: 0 auto; /* Center image */
+  display: block;
+  border-radius: 0; /* Remove rounded corners for wide images */
+}
+
+/* Only apply padding to square/portrait images */
+.art-detail-content.square .art-detail-image,
+.art-detail-content.portrait .art-detail-image {
+  padding: 10px;
+  background-color: #181818;
+} 

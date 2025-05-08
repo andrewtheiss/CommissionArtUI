@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useBlockchain } from '../contexts/BlockchainContext';
 import { getUserProfile, createProfile } from '../contracts/ProfileHubContract';
 import { getProfileInfo, getProfileRecentArtPieces } from '../contracts/ProfileContract';
@@ -8,6 +8,8 @@ import { getContractAddress } from '../utils/contracts';
 import { loadABI } from '../utils/abi';
 import { getArtPieceData } from '../contracts/ArtPieceContract';
 import ArtDisplay from '../components/ArtDisplay';
+import ArtDetailModal from '../components/ArtDetailModal';
+import { showArtDetail } from '../utils/navigation';
 import './Profile.css';
 
 // Placeholder image until we load from blockchain
@@ -27,6 +29,7 @@ interface ArtPieceData {
 
 const Profile: React.FC = () => {
   const { address } = useParams<{ address: string }>();
+  const navigate = useNavigate();
   const { 
     isConnected, 
     isLoading, 
@@ -61,6 +64,25 @@ const Profile: React.FC = () => {
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [profileCreationError, setProfileCreationError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  
+  // State for art detail modal
+  const [selectedArtId, setSelectedArtId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Add a preference for modal view
+  const [preferModalView, setPreferModalView] = useState(true);
+  
+  // Open art detail modal
+  const openArtDetailModal = (artId: string) => {
+    setSelectedArtId(artId);
+    setIsModalOpen(true);
+  };
+  
+  // Close art detail modal
+  const closeArtDetailModal = () => {
+    setIsModalOpen(false);
+    setSelectedArtId(null);
+  };
   
   // Check if profile exists and get profile address
   useEffect(() => {
@@ -216,28 +238,37 @@ const Profile: React.FC = () => {
       ) : (
         <div className="art-gallery-grid">
           {artPieces.map((art, index) => (
-            <div key={index} className="art-item">
-              {art.tokenUriData ? (
-                <ArtDisplay 
-                  imageData={art.tokenUriData} 
-                  title={art.title}
-                  contractAddress={art.address}
-                  className="art-display-component"
-                />
-              ) : (
-                <div className="art-fallback-container">
-                  <div className="art-image-container">
-                    <div className="art-loading-placeholder">
-                      <p>Loading artwork data...</p>
+            <div 
+              key={index} 
+              className="art-item-link"
+              onClick={(e) => {
+                e.preventDefault();
+                showArtDetail(preferModalView, art.address, navigate, openArtDetailModal);
+              }}
+            >
+              <div className="art-item">
+                {art.tokenUriData ? (
+                  <ArtDisplay 
+                    imageData={art.tokenUriData} 
+                    title={art.title}
+                    contractAddress={art.address}
+                    className="art-display-component"
+                  />
+                ) : (
+                  <div className="art-fallback-container">
+                    <div className="art-image-container">
+                      <div className="art-loading-placeholder">
+                        <p>Loading artwork data...</p>
+                      </div>
+                    </div>
+                    <div className="art-details">
+                      <h3 className="art-title">{art.title}</h3>
+                      <p className="art-description">{art.description}</p>
+                      <p className="art-address">{`${art.address.substring(0, 6)}...${art.address.substring(38)}`}</p>
                     </div>
                   </div>
-                  <div className="art-details">
-                    <h3 className="art-title">{art.title}</h3>
-                    <p className="art-description">{art.description}</p>
-                    <p className="art-address">{`${art.address.substring(0, 6)}...${art.address.substring(38)}`}</p>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -454,13 +485,102 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
+        <div className="profile-view-options">
+          <label className="view-toggle-label">
+            <span>View Mode:</span>
+            <div className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={preferModalView} 
+                onChange={() => setPreferModalView(!preferModalView)} 
+              />
+              <span className="toggle-slider"></span>
+            </div>
+            <span>{preferModalView ? 'Modal' : 'Page'}</span>
+          </label>
+        </div>
       </div>
       
       <div className="profile-content">
-        <ArtGallery title="My Art" artPieces={myArtPieces} />
+        <div className="gallery-header">
+          <h2>My Art</h2>
+          <div className="profile-view-options">
+            <label className="view-toggle-label">
+              <span>View Mode:</span>
+              <div className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={preferModalView} 
+                  onChange={() => setPreferModalView(!preferModalView)} 
+                />
+                <span className="toggle-slider"></span>
+              </div>
+              <span>{preferModalView ? 'Modal' : 'Page'}</span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="art-gallery-section">
+          {isLoadingArt ? (
+            <div className="art-gallery-loading">
+              <div className="spinner"></div>
+              <p>Loading artwork...</p>
+            </div>
+          ) : myArtPieces.length === 0 ? (
+            <div className="no-art-message">
+              <p>No artwork to display</p>
+            </div>
+          ) : (
+            <div className="art-gallery-grid">
+              {myArtPieces.map((art, index) => (
+                <div 
+                  key={index} 
+                  className="art-item-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    showArtDetail(preferModalView, art.address, navigate, openArtDetailModal);
+                  }}
+                >
+                  <div className="art-item">
+                    {art.tokenUriData ? (
+                      <ArtDisplay 
+                        imageData={art.tokenUriData} 
+                        title={art.title}
+                        contractAddress={art.address}
+                        className="art-display-component"
+                      />
+                    ) : (
+                      <div className="art-fallback-container">
+                        <div className="art-image-container">
+                          <div className="art-loading-placeholder">
+                            <p>Loading artwork data...</p>
+                          </div>
+                        </div>
+                        <div className="art-details">
+                          <h3 className="art-title">{art.title}</h3>
+                          <p className="art-description">{art.description}</p>
+                          <p className="art-address">{`${art.address.substring(0, 6)}...${art.address.substring(38)}`}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         
         {profileData.isArtist && (
           <ArtGallery title="Commissioned Works" artPieces={commissionedWorks} />
+        )}
+        
+        {/* Art Detail Modal */}
+        {selectedArtId && (
+          <ArtDetailModal 
+            artId={selectedArtId}
+            isOpen={isModalOpen}
+            onClose={closeArtDetailModal}
+          />
         )}
       </div>
     </div>
