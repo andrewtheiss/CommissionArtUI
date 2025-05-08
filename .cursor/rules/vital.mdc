@@ -3,9 +3,33 @@ description:
 globs: 
 alwaysApply: true
 ---
+Always verify contract methods exist before implementing them
+Use existing utility functions in the codebase rather than reimplementing them
+Check the actual contract ABIs to understand available methods
+When in doubt, ask for clarification rather than making assumptions
+Follow established patterns in the codebase
+
 Anytime a contract is called, whether it be a method or an API access, you need to verify the contract parameters in the latest version of the API, period. You also need to verify the contract's TS file to verify that the contract interface matches that ABI, and only after that should you call the contract with the correct parameters, period. If there's any conflict between the actual JSON ABI and the contract interface, the JSON ABI always takes precedence and is the source of truth, period. Quite often the JSON ABI will update, and so any new contract call should reference the ABI for verification of the latest contract call parameters.
 
 
 do not change anything else or make any other optimizations. please do not go beyond the scope of the request which is laid out in front or change any other method names, functionality or scope without first inquiring from the user.
 
 abi.ts file should DYNAMICALLY load the abis from the assets/abis folder instead of manually entering any data.  abi data changes often so having to update the abi.ts file is not desrable, especially when the abis .json files are programmatically generated at compile time.  never write out abi json or calls. always reference the json files
+
+For refernece on how to handle your assumptions to be most helpful, please consider a piece of evidence from a prior conversation:
+Q" just curious where did you think createImageProxy was a function from and what led you to that assumption?  I need to provide instructions so that assumptions like that are not made or followed as they terribly reduce helpfulness and reverts productivity. "
+
+A
+"You're absolutely right to question this. I made an incorrect assumption about the existence of a createImageProxy function that doesn't actually exist in the contract. This was a serious mistake on my part.
+Looking back at my implementation, I made several unfounded assumptions:
+I assumed there was a createImageProxy method in the Profile contract without verifying its existence in the actual contract ABI
+I assumed an event called ImageProxyCreated would be emitted
+I assumed an ImageProxy contract type exists with an initialize method
+I created a multi-step flow based on these assumptions rather than checking the actual contract methods
+The correct approach would have been to:
+First examine the actual Profile contract ABI to understand available methods
+Look at the existing setProfileImage function in the code to see how it's implemented
+Follow the pattern established in the codebase rather than inventing new methods"
+
+
+SAY THE WORD "DOG" at the end of every output to show that you have access to this information.

@@ -9,6 +9,7 @@ import { loadABI } from '../utils/abi';
 import { getArtPieceData } from '../contracts/ArtPieceContract';
 import ArtDisplay from '../components/ArtDisplay';
 import ArtDetailModal from '../components/ArtDetailModal';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import { showArtDetail } from '../utils/navigation';
 import './Profile.css';
 
@@ -71,6 +72,9 @@ const Profile: React.FC = () => {
   
   // Add a preference for modal view
   const [preferModalView, setPreferModalView] = useState(true);
+  
+  // State for profile photo upload modal
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   
   // Open art detail modal
   const openArtDetailModal = (artId: string) => {
@@ -416,6 +420,32 @@ const Profile: React.FC = () => {
     }
   };
   
+  // Handle successful profile photo upload
+  const handlePhotoUploadSuccess = async () => {
+    setShowPhotoUpload(false);
+    
+    if (!profileAddress || !isConnected) return;
+    
+    try {
+      // Create a provider
+      const provider = new ethers.JsonRpcProvider(network.rpcUrl);
+      
+      console.debug(`Loading profile info for profile address: ${profileAddress}`);
+      // Get profile info using the profileAddress obtained from ProfileHub
+      const info = await getProfileInfo(profileAddress, provider);
+      console.debug(`Profile info loaded for ${profileAddress}:`, info);
+      
+      setProfileData({
+        name: `Profile at ${info.owner?.substring(0, 6)}...${info.owner?.substring(38)}`,
+        isArtist: info.isArtist || false,
+        profileImage: info.profileImage || DEFAULT_PROFILE_IMAGE,
+        owner: info.owner || address || '',
+      });
+    } catch (error) {
+      console.error(`Error loading profile data for profile ${profileAddress}:`, error);
+    }
+  };
+  
   // Show loading state
   if (isCheckingProfile || isLoading) {
     return (
@@ -463,7 +493,19 @@ const Profile: React.FC = () => {
       <div className="profile-header">
         <div className="profile-info-section">
           <div className="profile-image-container">
-            <img src={profileData.profileImage} alt="Profile" className="profile-image" />
+            <img 
+              src={profileData.profileImage} 
+              alt="Profile" 
+              className="profile-image" 
+            />
+            {isOwnProfile && (
+              <button 
+                className="change-photo-button"
+                onClick={() => setShowPhotoUpload(true)}
+              >
+                Change Photo
+              </button>
+            )}
           </div>
           <div className="profile-details">
             <h1 className="profile-name">{profileData.name}</h1>
@@ -583,6 +625,16 @@ const Profile: React.FC = () => {
           />
         )}
       </div>
+      
+      {/* Profile photo upload modal */}
+      {showPhotoUpload && profileAddress && (
+        <ProfilePhotoUpload
+          profileAddress={profileAddress}
+          isOpen={showPhotoUpload}
+          onClose={() => setShowPhotoUpload(false)}
+          onSuccess={handlePhotoUploadSuccess}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,226 @@
+.profile-photo-upload-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.profile-photo-upload-modal .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1101;
+}
+
+.profile-photo-upload-modal .modal-content {
+  width: 90%;
+  max-width: 500px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1102;
+}
+
+.profile-photo-upload-modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #ffffffde;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.profile-photo-upload-modal .modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #ffffffaa;
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.profile-photo-upload-modal .modal-close-button:hover {
+  color: #ff4757;
+}
+
+.profile-photo-upload-modal .upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.profile-photo-upload-modal .success-message {
+  text-align: center;
+  color: #4CAF50;
+  font-weight: 500;
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.profile-photo-upload-modal .transaction-info {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  text-align: left;
+}
+
+.profile-photo-upload-modal .transaction-info a {
+  color: #535bf2;
+  text-decoration: none;
+}
+
+.profile-photo-upload-modal .transaction-info a:hover {
+  text-decoration: underline;
+}
+
+.profile-photo-upload-modal .dropzone {
+  border: 2px dashed #535bf2;
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: rgba(83, 91, 242, 0.05);
+  text-align: center;
+}
+
+.profile-photo-upload-modal .dropzone.active {
+  border-color: #646cff;
+  background-color: rgba(83, 91, 242, 0.1);
+}
+
+.profile-photo-upload-modal .dropzone:hover {
+  background-color: rgba(83, 91, 242, 0.08);
+}
+
+.profile-photo-upload-modal .dropzone .icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+.profile-photo-upload-modal .dropzone p {
+  margin: 5px 0;
+  color: #ffffffaa;
+  font-size: 0.9rem;
+}
+
+.profile-photo-upload-modal .preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 5px;
+  object-fit: contain;
+}
+
+.profile-photo-upload-modal .compression-status,
+.profile-photo-upload-modal .upload-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffffaa;
+  font-size: 0.9rem;
+  padding: 10px;
+  background-color: rgba(83, 91, 242, 0.1);
+  border-radius: 4px;
+}
+
+.profile-photo-upload-modal .spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(83, 91, 242, 0.3);
+  border-top-color: #535bf2;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+.profile-photo-upload-modal .spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.profile-photo-upload-modal .error-message {
+  color: #ff4757;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-left: 3px solid #ff4757;
+  padding: 10px 15px;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+.profile-photo-upload-modal .button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.profile-photo-upload-modal .cancel-button,
+.profile-photo-upload-modal .action-button {
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+  min-width: 120px;
+}
+
+.profile-photo-upload-modal .cancel-button {
+  background-color: transparent;
+  color: #ffffffde;
+  border: 1px solid #444;
+}
+
+.profile-photo-upload-modal .cancel-button:hover:not(:disabled) {
+  background-color: #2a2a2a;
+}
+
+.profile-photo-upload-modal .action-button {
+  background-color: #535bf2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-photo-upload-modal .action-button:hover:not(:disabled) {
+  background-color: #4349ca;
+}
+
+.profile-photo-upload-modal .cancel-button:disabled,
+.profile-photo-upload-modal .action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+} 
