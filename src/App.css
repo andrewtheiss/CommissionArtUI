@@ -262,7 +262,6 @@ h2 {
     padding: 0 8px;
   }
   .header-links {
-    flex-direction: column;
     align-items: center;
     gap: 8px;
     width: 100%;
@@ -1163,6 +1162,17 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 20px;
+}
+
+/* Ensure this is the last and most specific rule for mobile */
+@media (max-width: 750px) {
+  .art-gallery-section {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+  .art-gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* Ensure this is the last and most specific rule for mobile */
