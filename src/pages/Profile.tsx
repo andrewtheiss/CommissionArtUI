@@ -37,6 +37,16 @@ interface ProfileData {
   owner: string;
 }
 
+// Utility to check if a string is a valid Ethereum address
+function isValidEthAddress(address: string | undefined | null): address is string {
+  return (
+    typeof address === 'string' &&
+    address.length === 42 &&
+    address.startsWith('0x') &&
+    /^0x[0-9a-fA-F]{40}$/.test(address)
+  );
+}
+
 const Profile: React.FC = () => {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
@@ -95,22 +105,19 @@ const Profile: React.FC = () => {
   // Check if profile exists and get profile address
   useEffect(() => {
     const fetchProfileAddress = async () => {
-      if (!address || !isConnected) {
+      if (!isValidEthAddress(address)) {
         setIsCheckingProfile(false);
         return;
       }
-      
+      // Only require connection if user is viewing their own profile
       setIsCheckingProfile(true);
-      
       try {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-        
         console.debug(`Fetching profile address for wallet address: ${address}`);
         // Get profile address from ProfileHub
         const profileAddr = await getUserProfile(address, provider);
         console.debug(`ProfileHub returned profile address: ${profileAddr}`);
-        
         setProfileAddress(profileAddr);
         setIsCheckingProfile(false);
       } catch (error) {
@@ -119,19 +126,16 @@ const Profile: React.FC = () => {
         setIsCheckingProfile(false);
       }
     };
-    
     fetchProfileAddress();
   }, [address, isConnected, network.rpcUrl]);
   
   // Load profile data from blockchain when address changes and profile exists
   useEffect(() => {
     const loadProfileData = async () => {
-      if (!profileAddress || !isConnected) return;
-      
+      if (!isValidEthAddress(address) || !profileAddress) return;
       try {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-        
         console.debug(`Loading profile info for profile address: ${profileAddress}`);
         // Get profile info using the profileAddress obtained from ProfileHub
         const info = await getProfileInfo(profileAddress, provider);
@@ -185,19 +189,15 @@ const Profile: React.FC = () => {
   // Load art pieces from blockchain
   useEffect(() => {
     const loadArtPieces = async () => {
-      if (!profileAddress || !isConnected) return;
-      
+      if (!isValidEthAddress(address) || !profileAddress) return;
       setIsLoadingArt(true);
-      
       try {
         // Create a provider
         const provider = new ethers.JsonRpcProvider(network.rpcUrl);
-        
         console.debug(`Loading art pieces for profile: ${profileAddress}`);
         // Use the profileAddress obtained from ProfileHub to get recent art pieces
         const artPieceAddresses = await getProfileRecentArtPieces(profileAddress, provider);
         console.debug(`Found ${artPieceAddresses.length} art pieces for profile: ${profileAddress}`);
-        
         // Initialize art pieces array with minimal data
         const artPiecesInitial = artPieceAddresses.map(address => ({
           address,
@@ -205,16 +205,13 @@ const Profile: React.FC = () => {
           description: 'Loading artwork data...',
           isLoaded: false
         }));
-        
         // Set initial state while we load the full data
         setMyArtPieces(artPiecesInitial);
-        
         // Load detailed data for each art piece in parallel
         const artPiecesPromises = artPieceAddresses.map(async (artAddress, index) => {
           try {
             // Get detailed art piece data including the image data
             const artData = await getArtPieceData(artAddress, provider);
-            
             return {
               address: artAddress,
               title: artData.title,
@@ -236,22 +233,18 @@ const Profile: React.FC = () => {
             };
           }
         });
-        
         // Wait for all art piece data to load
         const loadedArtPieces = await Promise.all(artPiecesPromises);
-        
         // Update state with the loaded art pieces
         setMyArtPieces(loadedArtPieces);
-        
         setIsLoadingArt(false);
       } catch (error) {
         console.error(`Error loading art pieces for profile ${profileAddress}:`, error);
         setIsLoadingArt(false);
       }
     };
-    
     loadArtPieces();
-  }, [profileAddress, isConnected, network.rpcUrl]);
+  }, [profileAddress, network.rpcUrl, address]);
   
   // Load commissioned works only if artist
   useEffect(() => {
@@ -583,7 +576,7 @@ const Profile: React.FC = () => {
                 className="profile-image" 
               />
             )}
-            {isOwnProfile && (
+            {isConnected && isOwnProfile && (
               <button 
                 className="change-photo-button"
                 onClick={() => setShowPhotoUpload(true)}
