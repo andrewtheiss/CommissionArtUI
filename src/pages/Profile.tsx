@@ -28,6 +28,15 @@ interface ArtPieceData {
   isLoaded?: boolean;
 }
 
+// Interface for profile data
+interface ProfileData {
+  name: string;
+  isArtist: boolean;
+  profileImage: string | Uint8Array;
+  profileImageData?: Uint8Array;
+  owner: string;
+}
+
 const Profile: React.FC = () => {
   const { address } = useParams<{ address: string }>();
   const navigate = useNavigate();
@@ -46,12 +55,7 @@ const Profile: React.FC = () => {
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
   
   // State for profile data
-  const [profileData, setProfileData] = useState<{
-    name: string;
-    isArtist: boolean;
-    profileImage: string;
-    owner: string;
-  }>({
+  const [profileData, setProfileData] = useState<ProfileData>({
     name: 'Artist Name',
     isArtist: true,
     profileImage: DEFAULT_PROFILE_IMAGE,
@@ -133,10 +137,41 @@ const Profile: React.FC = () => {
         const info = await getProfileInfo(profileAddress, provider);
         console.debug(`Profile info loaded for ${profileAddress}:`, info);
         
+        // If there's a profile image, we need to fetch the image data from the contract
+        let profileImageData: string | Uint8Array = DEFAULT_PROFILE_IMAGE;
+        let imageRawData: Uint8Array | undefined = undefined;
+        
+        if (info.profileImage) {
+          try {
+            // Get the ArtPiece contract ABI
+            const artPieceABI = loadABI('ArtPiece');
+            
+            if (artPieceABI) {
+              // Create contract instance for the profile image
+              const imageContract = new ethers.Contract(info.profileImage, artPieceABI, provider);
+              
+              // Fetch the image data
+              const tokenUriData = await imageContract.getTokenURIData();
+              
+              if (tokenUriData) {
+                // Store the raw image data for ArtDisplay
+                imageRawData = tokenUriData;
+                // Use the contract address as the image data source
+                profileImageData = info.profileImage;
+              }
+            }
+          } catch (imageError) {
+            console.error(`Error loading profile image data from ${info.profileImage}:`, imageError);
+            // Fall back to default image
+            profileImageData = DEFAULT_PROFILE_IMAGE;
+          }
+        }
+        
         setProfileData({
           name: `Profile at ${info.owner?.substring(0, 6)}...${info.owner?.substring(38)}`,
           isArtist: info.isArtist || false,
-          profileImage: info.profileImage || DEFAULT_PROFILE_IMAGE,
+          profileImage: profileImageData,
+          profileImageData: imageRawData,
           owner: info.owner || address || '',
         });
       } catch (error) {
@@ -208,14 +243,6 @@ const Profile: React.FC = () => {
         // Update state with the loaded art pieces
         setMyArtPieces(loadedArtPieces);
         
-        // If we're an artist, we should also load commissioned works
-        // For now, this is left as a placeholder
-        if (profileData.isArtist) {
-          // For commissioned works, we'll use placeholders for now
-          // In a real implementation, you'd fetch these from the artist's commissioned works
-          setCommissionedWorks([]);
-        }
-        
         setIsLoadingArt(false);
       } catch (error) {
         console.error(`Error loading art pieces for profile ${profileAddress}:`, error);
@@ -224,6 +251,16 @@ const Profile: React.FC = () => {
     };
     
     loadArtPieces();
+  }, [profileAddress, isConnected, network.rpcUrl]);
+  
+  // Load commissioned works only if artist
+  useEffect(() => {
+    const loadCommissionedWorks = async () => {
+      if (!profileAddress || !isConnected || !profileData.isArtist) return;
+      // Placeholder: in a real implementation, fetch commissioned works here
+      setCommissionedWorks([]);
+    };
+    loadCommissionedWorks();
   }, [profileAddress, isConnected, network.rpcUrl, profileData.isArtist]);
   
   // Reusable art gallery component with ArtDisplay
@@ -435,10 +472,41 @@ const Profile: React.FC = () => {
       const info = await getProfileInfo(profileAddress, provider);
       console.debug(`Profile info loaded for ${profileAddress}:`, info);
       
+      // If there's a profile image, we need to fetch the image data from the contract
+      let profileImageData: string | Uint8Array = DEFAULT_PROFILE_IMAGE;
+      let imageRawData: Uint8Array | undefined = undefined;
+      
+      if (info.profileImage) {
+        try {
+          // Get the ArtPiece contract ABI
+          const artPieceABI = loadABI('ArtPiece');
+          
+          if (artPieceABI) {
+            // Create contract instance for the profile image
+            const imageContract = new ethers.Contract(info.profileImage, artPieceABI, provider);
+            
+            // Fetch the image data
+            const tokenUriData = await imageContract.getTokenURIData();
+            
+            if (tokenUriData) {
+              // Store the raw image data for ArtDisplay
+              imageRawData = tokenUriData;
+              // Use the contract address as the image data source
+              profileImageData = info.profileImage;
+            }
+          }
+        } catch (imageError) {
+          console.error(`Error loading profile image data from ${info.profileImage}:`, imageError);
+          // Fall back to default image
+          profileImageData = DEFAULT_PROFILE_IMAGE;
+        }
+      }
+      
       setProfileData({
         name: `Profile at ${info.owner?.substring(0, 6)}...${info.owner?.substring(38)}`,
         isArtist: info.isArtist || false,
-        profileImage: info.profileImage || DEFAULT_PROFILE_IMAGE,
+        profileImage: profileImageData,
+        profileImageData: imageRawData,
         owner: info.owner || address || '',
       });
     } catch (error) {
@@ -493,11 +561,28 @@ const Profile: React.FC = () => {
       <div className="profile-header">
         <div className="profile-info-section">
           <div className="profile-image-container">
-            <img 
-              src={profileData.profileImage} 
-              alt="Profile" 
-              className="profile-image" 
-            />
+            {isCheckingProfile || isLoading ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div className="spinner" style={{ margin: '24px 0' }}></div>
+                </div>
+              </>
+            ) : !profileData.profileImage || profileData.profileImage === '' ? (
+              <div style={{ fontSize: '3rem', textAlign: 'center', margin: '24px 0' }} title="Profile image not found">🚫</div>
+            ) : profileData.profileImage !== DEFAULT_PROFILE_IMAGE ? (
+              <ArtDisplay
+                imageData={profileData.profileImageData || profileData.profileImage}
+                title="Profile Photo"
+                className="profile-display"
+                showDebug={false}
+              />
+            ) : (
+              <img 
+                src={DEFAULT_PROFILE_IMAGE} 
+                alt="" 
+                className="profile-image" 
+              />
+            )}
             {isOwnProfile && (
               <button 
                 className="change-photo-button"
@@ -507,8 +592,8 @@ const Profile: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="profile-details">
-            <h1 className="profile-name">{profileData.name}</h1>
+          <div className="profile-details left-justified">
+            <h1 className="profile-name">Collector {profileData.owner ? `${profileData.owner.substring(0, 6)}...${profileData.owner.substring(profileData.owner.length - 4)}` : ''}</h1>
             <p className="profile-address">{profileData.owner}</p>
             <div className="profile-contract-address">
               <span className="profile-label">Profile Contract:</span>
@@ -517,7 +602,7 @@ const Profile: React.FC = () => {
                 title={copySuccess || "Click to copy address"}
                 onClick={() => profileAddress && copyToClipboard(profileAddress)}
               >
-                {profileAddress ? `${profileAddress.substring(0, 8)}...${profileAddress.substring(36)}` : ''}
+                {profileAddress ? `${profileAddress.substring(0, 8)}...${profileAddress.substring(profileAddress.length - 4)}` : ''}
                 <span className="copy-icon">📋</span>
                 {copySuccess && <span className="copy-indicator">{copySuccess}</span>}
               </span>
@@ -527,39 +612,11 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="profile-view-options">
-          <label className="view-toggle-label">
-            <span>View Mode:</span>
-            <div className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={preferModalView} 
-                onChange={() => setPreferModalView(!preferModalView)} 
-              />
-              <span className="toggle-slider"></span>
-            </div>
-            <span>{preferModalView ? 'Modal' : 'Page'}</span>
-          </label>
-        </div>
       </div>
       
       <div className="profile-content">
         <div className="gallery-header">
           <h2>My Art</h2>
-          <div className="profile-view-options">
-            <label className="view-toggle-label">
-              <span>View Mode:</span>
-              <div className="toggle-switch">
-                <input 
-                  type="checkbox" 
-                  checked={preferModalView} 
-                  onChange={() => setPreferModalView(!preferModalView)} 
-                />
-                <span className="toggle-slider"></span>
-              </div>
-              <span>{preferModalView ? 'Modal' : 'Page'}</span>
-            </label>
-          </div>
         </div>
         
         <div className="art-gallery-section">
@@ -611,10 +668,6 @@ const Profile: React.FC = () => {
             </div>
           )}
         </div>
-        
-        {profileData.isArtist && (
-          <ArtGallery title="Commissioned Works" artPieces={commissionedWorks} />
-        )}
         
         {/* Art Detail Modal */}
         {selectedArtId && (

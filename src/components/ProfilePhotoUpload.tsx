@@ -246,7 +246,19 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       
       // Set the profile image to point to the proxy
       console.log('Setting profile image pointer...');
-      const setImageTx = await profileContract.setProfileImage(proxyAddress, { gasLimit: 300000 });
+      
+      // Estimate gas for setting profile image
+      let setImageGas;
+      try {
+        setImageGas = await profileContract.setProfileImage.estimateGas(proxyAddress);
+        // Add 20% buffer
+        setImageGas = Math.floor(Number(setImageGas) * 1.2);
+      } catch (error) {
+        console.warn('Gas estimation failed for setProfileImage, using safe default:', error);
+        setImageGas = 300000; // Safe default
+      }
+      
+      const setImageTx = await profileContract.setProfileImage(proxyAddress, { gasLimit: setImageGas });
       
       setTxHash(setImageTx.hash);
       console.log(`Set image transaction sent: ${setImageTx.hash}`);
@@ -256,7 +268,19 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       
       // Set the profile image format
       console.log('Setting profile image format...');
-      const setFormatTx = await profileContract.setProfileImageFormat(compressedImage.format, { gasLimit: 200000 });
+      
+      // Estimate gas for setting profile image format
+      let setFormatGas;
+      try {
+        setFormatGas = await profileContract.setProfileImageFormat.estimateGas(compressedImage.format);
+        // Add 20% buffer
+        setFormatGas = Math.floor(Number(setFormatGas) * 1.2);
+      } catch (error) {
+        console.warn('Gas estimation failed for setProfileImageFormat, using safe default:', error);
+        setFormatGas = 200000; // Safe default
+      }
+      
+      const setFormatTx = await profileContract.setProfileImageFormat(compressedImage.format, { gasLimit: setFormatGas });
       await setFormatTx.wait();
       
       console.log('Profile image updated successfully');

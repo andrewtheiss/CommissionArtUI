@@ -1,3 +1,8 @@
+body, #root {
+  background: #18181b !important;
+  min-height: 100vh;
+}
+
 #root {
   width: 100%;
   margin: 0 auto;

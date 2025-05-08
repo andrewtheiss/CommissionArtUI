@@ -163,7 +163,13 @@ const NetworkStatus = () => {
 
 // Main app component that uses the network bridge
 const AppContent = () => {
-  const [showWelcome, setShowWelcome] = useState(true);
+  // Show WelcomeWidget only if not shown today
+  const getShouldShowWelcome = () => {
+    const lastShown = localStorage.getItem('welcomeWidgetLastShown');
+    const today = new Date().toISOString().slice(0, 10);
+    return lastShown !== today;
+  };
+  const [showWelcome, setShowWelcome] = useState(getShouldShowWelcome());
   const { switchToLayer, networkType, isConnected, isLoading, walletAddress } = useBlockchain();
   const [hasSynced, setHasSynced] = useState(false);
   // Add state to track initial loading vs. connection attempts
@@ -201,6 +207,7 @@ const AppContent = () => {
         <div className="app-header">
           <NetworkStatus />
           <div className="header-links">
+            <Link to="/" className="header-link">Home</Link>
             <Link to="/add-art" className="header-link">Add Art</Link>
             <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
             <div className="account-link-container">
@@ -211,9 +218,6 @@ const AppContent = () => {
             </div>
           </div>
         </div>
-        
-        <h1>Latest Commissions</h1>
-        
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/update-nft" element={<UpdateNFTOwnership />} />
