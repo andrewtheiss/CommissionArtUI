@@ -1,23 +1,25 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { useState, useEffect, Suspense, lazy } from 'react'
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home'
-import UpdateNFTOwnership from './pages/UpdateNFTOwnership'
-import WelcomeWidget from './components/WelcomeWidget'
 import { BlockchainProvider, useBlockchain } from './contexts/BlockchainContext'
 import { mapLayerToNetwork } from './utils/networkUtils'
 import { syncNetworkWithBlockchain, setNetworkEverywhere } from './utils/networkBridge'
-import AddArt from './pages/AddArt'
 import Footer from './components/Footer'
 import Profile from './pages/Profile'
 import ProfileStatusIndicator from './components/ProfileStatusIndicator'
 import { preloadCriticalABIs } from './utils/abi'
 import ArtDetail from './pages/ArtDetail'
+import WelcomeWidget from './components/WelcomeWidget'
 
 // Preload critical ABIs to ensure they're available before they're needed
 preloadCriticalABIs().catch(error => {
   console.error('Error preloading ABIs:', error);
 });
+
+// Lazy load heavy modules
+const AddArt = lazy(() => import('./pages/AddArt'));
+const UpdateNFTOwnership = lazy(() => import('./pages/UpdateNFTOwnership'));
 
 // Network Status component that uses the blockchain context
 const NetworkStatus = () => {
@@ -170,7 +172,7 @@ const AppContent = () => {
     return lastShown !== today;
   };
   const [showWelcome, setShowWelcome] = useState(getShouldShowWelcome());
-  const { switchToLayer, networkType, isConnected, isLoading, walletAddress } = useBlockchain();
+  const { switchToLayer, networkType, isConnected, isLoading, walletAddress, connectWallet } = useBlockchain();
   const [hasSynced, setHasSynced] = useState(false);
   // Add state to track initial loading vs. connection attempts
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -191,6 +193,15 @@ const AppContent = () => {
     }
   }, [isLoading, initialLoadComplete]);
 
+  // Add connect handler for Account button
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
+
   // Remove the full-page loading screen. Always render the app structure.
   return (
     <div className="app-container">
@@ -208,17 +219,31 @@ const AppContent = () => {
             <Link to="/add-art" className="header-link">Add Art</Link>
             <Link to="/update-nft" className="update-nft-button">Update NFT Ownership</Link>
             <div className="account-link-container">
-              <Link to={`/profile/${walletAddress || ''}`} className="update-nft-button">
-                Account
-              </Link>
+              {isConnected ? (
+                <Link to={`/profile/${walletAddress || ''}`} className="update-nft-button">
+                  Account
+                </Link>
+              ) : (
+                <button className="update-nft-button" onClick={handleConnectWallet} style={{ minWidth: 0 }}>
+                  Account
+                </button>
+              )}
               <ProfileStatusIndicator />
             </div>
           </div>
         </div>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/update-nft" element={<UpdateNFTOwnership />} />
-          <Route path="/add-art" element={<AddArt />} />
+          <Route path="/update-nft" element={
+            <Suspense fallback={<div style={{textAlign: 'center', padding: '2em'}}><span className="spinner" style={{ marginRight: 10, verticalAlign: 'middle' }} />Loading...</div>}>
+              <UpdateNFTOwnership />
+            </Suspense>
+          } />
+          <Route path="/add-art" element={
+            <Suspense fallback={<div style={{textAlign: 'center', padding: '2em'}}><span className="spinner" style={{ marginRight: 10, verticalAlign: 'middle' }} />Loading...</div>}>
+              <AddArt />
+            </Suspense>
+          } />
           <Route path="/profile/:address" element={<Profile />} />
           <Route path="/myArt/:artId" element={<ArtDetail />} />
         </Routes>
