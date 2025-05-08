@@ -191,18 +191,15 @@ const AppContent = () => {
     }
   }, [isLoading, initialLoadComplete]);
 
-  // Only show loading indicator during initial blockchain connection
-  // Not during subsequent wallet connection attempts
-  if (isLoading && !initialLoadComplete) {
-    return (
-      <div className="app-container loading-container">
-        <div className="loader">Connecting to blockchain...</div>
-      </div>
-    );
-  }
-  
+  // Remove the full-page loading screen. Always render the app structure.
   return (
     <div className="app-container">
+      {isLoading && !initialLoadComplete && (
+        <div style={{ width: '100%', background: '#23234a', color: '#fff', textAlign: 'center', padding: '8px 0', fontWeight: 500, letterSpacing: 1, zIndex: 1000 }}>
+          <span className="spinner" style={{ marginRight: 10, verticalAlign: 'middle' }} />
+          Connecting to blockchain...
+        </div>
+      )}
       <div className="app-main-content">
         <div className="app-header">
           <NetworkStatus />

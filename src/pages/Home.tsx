@@ -48,7 +48,14 @@ const Home = () => {
     <div className="container">
         
     <h1>Latest Commissions</h1>
-    
+    <div style={{ textAlign: 'center', marginBottom: '1.5em', color: '#aaa', fontSize: '1.1em' }}>
+      <div style={{ fontStyle: 'italic', fontWeight: 500, marginBottom: '0.5em' }}>
+        *Verified Commissions Coming Soon*
+      </div>
+      <div>
+        for now, <a href="/profile/0x2D68643fC11D8952324ca051fFa5c7DB5F9219D8" style={{ color: '#646cff', textDecoration: 'underline' }}>check one out</a> or upload some art
+      </div>
+    </div>
       <div className="image-grid">
         {renderPlaceholders()}
         {isDataLoading && (

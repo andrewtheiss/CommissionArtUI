@@ -59,7 +59,11 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({ visible, onClose }) => {
     <div className="welcome-overlay">
       <div className="welcome-widget">
       <h1 className="coming-soon-text">Welcome to Commission Art!</h1>
-        <button className="close-button" onClick={onClose}>×</button>
+        <button className="close-button" onClick={() => {
+          const today = new Date().toISOString().slice(0, 10);
+          localStorage.setItem('welcomeWidgetLastShown', today);
+          onClose();
+        }}>×</button>
         
         <div className="nft-showcase">
           <div className="nft-image-container">
