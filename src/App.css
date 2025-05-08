@@ -1,3 +1,8 @@
+body, #root {
+  background: #18181b !important;
+  min-height: 100vh;
+}
+
 #root {
   width: 100%;
   margin: 0 auto;
@@ -12,6 +17,17 @@
   padding: 2rem 2rem 0 2rem;
   max-width: 1200px;
   width: 100%;
+}
+
+@media (max-width: 900px) {
+  .app-container {
+    padding: 1rem 0.5rem 0 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.5rem 0.2rem 0 0.2rem;
+  }
 }
 
 .app-main-content {
@@ -53,6 +69,20 @@ h2 {
   transition: all 0.3s ease;
   width: 100%;
   max-width: 500px;
+}
+
+@media (max-width: 900px) {
+  .blockchain-status {
+    max-width: 100%;
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 600px) {
+  .blockchain-status {
+    max-width: 100%;
+    margin-bottom: 4px;
+    padding: 8px 4px;
+  }
 }
 
 .blockchain-status.loading {
@@ -224,6 +254,35 @@ h2 {
   align-items: center;
   padding: 0 20px;
   width: 100%;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    flex-wrap: wrap;
+    padding: 0 8px;
+  }
+  .header-links {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 2px;
+  }
+  .header-links {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 6px;
+    margin-top: 8px;
+  }
 }
 
 .update-nft-button {
@@ -881,6 +940,26 @@ h2 {
   flex-direction: column;
   gap: 2rem;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #ffffffde;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .profile-container {
+    max-width: 100%;
+    padding: 10px 2vw;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 600px) {
+  .profile-container {
+    max-width: 100%;
+    padding: 4px 1vw;
+    margin: 0 auto;
+  }
 }
 
 .profile-header {
@@ -1031,6 +1110,19 @@ h2 {
   width: 100%;
 }
 
+@media (max-width: 600px) {
+  .art-gallery-section {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+@media (max-width: 400px) {
+  .art-gallery-section {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+}
+
 .art-gallery-section h2 {
   margin-top: 0;
   margin-bottom: 20px;
@@ -1071,6 +1163,17 @@ h2 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 20px;
+}
+
+/* Ensure this is the last and most specific rule for mobile */
+@media (max-width: 550px) {
+  .art-gallery-section {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+  .art-gallery-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .art-item {

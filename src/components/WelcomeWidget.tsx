@@ -20,7 +20,10 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({ visible, onClose }) => {
     if (buttonState === 0) {
       setButtonState(1);
     } else if (buttonState === 1) {
-      window.open('https://x.com/andrewtheiss', '_blank');
+      // Set localStorage so modal doesn't show again today
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem('welcomeWidgetLastShown', today);
+      window.location.assign('/profile/0x2D68643fC11D8952324ca051fFa5c7DB5F9219D8');
     }
   };
 
@@ -55,6 +58,7 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({ visible, onClose }) => {
   return (
     <div className="welcome-overlay">
       <div className="welcome-widget">
+      <h1 className="coming-soon-text">Welcome to Commission Art!</h1>
         <button className="close-button" onClick={onClose}>×</button>
         
         <div className="nft-showcase">
@@ -64,8 +68,7 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({ visible, onClose }) => {
             </div>
           </div>
           
-          <h1 className="coming-soon-text">Commission Art is coming soon</h1>
-          <p className="subtitle">Curate and track your art.  Find artists and commission them.</p>
+          <p className="subtitle" style={{ fontWeight: 700, color: '#f44336', fontSize: '1.2em' }}>We are currently early Alpha</p>
         </div>
         
         <div className="commission-grid">
@@ -94,10 +97,18 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({ visible, onClose }) => {
           ))}
         </div>
         
+        <a
+          href="https://x.com/andrewtheiss"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: 'block', textAlign: 'center', color: '#1da1f2', textDecoration: 'underline', fontWeight: 500, margin: '1.5em 0 1em 0' }}
+        >
+          Follow updates on X
+        </a>
         <button className="notify-button" onClick={handleButtonClick}>
           {buttonState === 0 
-            ? "Notify me when Beta Access is available" 
-            : "No emails yet: Follow development on X for now"}
+            ? "For now,I will only use Testnet L2 - Sepolia Arbitrum" 
+            : "I understand: ALL uploaded art during alpha will have to be re-uploaded."}
         </button>
       </div>
     </div>

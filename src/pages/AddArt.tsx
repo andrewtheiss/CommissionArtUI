@@ -126,7 +126,7 @@ const AddArt: React.FC = () => {
         quality: 0.8,
         maxWidth: null,
         maxHeight: null,
-        targetSizeKB: 44, 
+        targetSizeKB: 42, 
         autoOptimize: true
       }) as CompressionResult;
       

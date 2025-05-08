@@ -46,6 +46,9 @@ const Home = () => {
 
   return (
     <div className="container">
+        
+    <h1>Latest Commissions</h1>
+    
       <div className="image-grid">
         {renderPlaceholders()}
         {isDataLoading && (
