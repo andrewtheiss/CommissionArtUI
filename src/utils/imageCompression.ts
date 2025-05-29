@@ -224,9 +224,9 @@ const optimizeImageForSize = async (
   // Start with original dimensions and try all formats and qualities
   let bestResult: CompressionResult | null = null;
   
-  // Try different formats and quality levels
+  // Try different formats and quality levels with early stopping optimization
   for (const format of formatOptions) {
-    // Try high quality first, then lower if needed
+    // Try high quality first, then lower if needed - but stop early when we find a good result
     for (let quality = 0.9; quality >= 0.4; quality -= 0.1) {
       // Create a canvas with original dimensions
       const canvas = document.createElement('canvas');
@@ -245,24 +245,66 @@ const optimizeImageForSize = async (
         
         console.log(`Format: ${format}, Quality: ${quality.toFixed(1)}, Size: ${sizeKB.toFixed(2)}KB`);
         
-        // Check if this result is better than our previous best
-        if (sizeKB <= targetSizeKB && (!bestResult || sizeKB > bestResult.sizeKB)) {
-          bestResult = {
-            dataUrl,
-            width: originalWidth,
-            height: originalHeight,
-            sizeKB,
-            format,
-            quality
-          };
-          console.log(`New best result: ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
+        // Check if this result meets our criteria
+        if (sizeKB <= targetSizeKB) {
+          // This result is under the target size
+          if (!bestResult || sizeKB > bestResult.sizeKB) {
+            bestResult = {
+              dataUrl,
+              width: originalWidth,
+              height: originalHeight,
+              sizeKB,
+              format,
+              quality
+            };
+            console.log(`New best result: ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
+          }
           
-          // If we're very close to target with a good format, we can stop early
-          if (sizeKB > targetSizeKB * 0.95) {
-            console.log(`Optimal result found early, stopping search`);
+          // OPTIMIZATION: Stop early if we found a good result
+          // If we're within acceptable range (80-100% of target), stop searching
+          if (sizeKB >= targetSizeKB * 0.8) {
+            console.log(`Good result found (${sizeKB.toFixed(2)}KB is ${((sizeKB/targetSizeKB)*100).toFixed(1)}% of target), stopping search`);
             return addByteArray(bestResult);
           }
+          
+          // If we found a result significantly under target, try one more quality level to see if we can get closer
+          // but don't go below the next quality level
+          if (quality > 0.5 && sizeKB < targetSizeKB * 0.7) {
+            console.log(`Result is well under target, trying one higher quality level`);
+            const higherQuality = Math.min(0.9, quality + 0.1);
+            
+            const testCanvas = document.createElement('canvas');
+            testCanvas.width = originalWidth;
+            testCanvas.height = originalHeight;
+            const testCtx = testCanvas.getContext('2d');
+            testCtx?.drawImage(img, 0, 0, originalWidth, originalHeight);
+            
+            const testDataUrl = testCanvas.toDataURL(mimeType, higherQuality);
+            const testSizeKB = calculateDataUrlSizeKB(testDataUrl);
+            
+            console.log(`Testing higher quality ${higherQuality.toFixed(1)}: ${testSizeKB.toFixed(2)}KB`);
+            
+            if (testSizeKB <= targetSizeKB) {
+              bestResult = {
+                dataUrl: testDataUrl,
+                width: originalWidth,
+                height: originalHeight,
+                sizeKB: testSizeKB,
+                format,
+                quality: higherQuality
+              };
+              console.log(`Better result found at higher quality: ${testSizeKB.toFixed(2)}KB`);
+            }
+          }
+          
+          // Return the best result we found
+          console.log(`Optimal result achieved, stopping search`);
+          return addByteArray(bestResult);
         }
+        
+        // If size is too large, continue to next quality level
+        console.log(`Size too large (${sizeKB.toFixed(2)}KB > ${targetSizeKB.toFixed(2)}KB), trying lower quality`);
+        
       } catch (error) {
         console.warn(`Format ${format} not supported by browser, skipping`);
         // Skip this format as browser doesn't support it
@@ -303,21 +345,23 @@ const optimizeImageForSize = async (
             
             console.log(`Scale: ${Math.round(scale * 100)}%, Format: ${format}, Quality: ${quality.toFixed(1)}, Size: ${sizeKB.toFixed(2)}KB`);
             
-            // Check if this result is better than our previous best
-            if (sizeKB <= targetSizeKB && (!bestResult || sizeKB > bestResult.sizeKB)) {
-              bestResult = {
-                dataUrl,
-                width,
-                height,
-                sizeKB,
-                format,
-                quality
-              };
-              console.log(`New best result: ${width}x${height} ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
+            // Check if this result meets our criteria
+            if (sizeKB <= targetSizeKB) {
+              if (!bestResult || sizeKB > bestResult.sizeKB) {
+                bestResult = {
+                  dataUrl,
+                  width,
+                  height,
+                  sizeKB,
+                  format,
+                  quality
+                };
+                console.log(`New best result: ${width}x${height} ${format} at ${quality.toFixed(1)} quality (${sizeKB.toFixed(2)}KB)`);
+              }
               
-              // If we're very close to target with a good format, we can stop early
-              if (sizeKB > targetSizeKB * 0.95) {
-                console.log(`Optimal result found, stopping search`);
+              // OPTIMIZATION: Stop early if we found a good result within acceptable range
+              if (sizeKB >= targetSizeKB * 0.8) {
+                console.log(`Good scaled result found, stopping search`);
                 return addByteArray(bestResult);
               }
             }
@@ -329,9 +373,9 @@ const optimizeImageForSize = async (
         }
       }
       
-      // If we've found a result that's at least 90% of our target size, stop reducing dimensions
-      if (bestResult && bestResult.sizeKB > targetSizeKB * 0.9) {
-        console.log(`Found good result at ${Math.round(scale * 100)}% scale, stopping dimension reduction`);
+      // If we've found a result that's at least 70% of our target size, stop reducing dimensions
+      if (bestResult && bestResult.sizeKB > targetSizeKB * 0.7) {
+        console.log(`Found acceptable result at ${Math.round(scale * 100)}% scale, stopping dimension reduction`);
         break;
       }
     }
