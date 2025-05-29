@@ -1,6 +1,13 @@
 /**
  * ArWeave utility for uploading large original files
  * Handles communication with desktop ArWeave wallet extension
+ * 
+ * IMPLEMENTATION NOTE: Successfully tested and working as of [current date]
+ * - Uses dual approach: ArConnect native createTransaction() with fallback to arweave-js + sign()
+ * - Uploads ORIGINAL files (not compressed versions) to preserve quality
+ * - Example successful upload: Transaction ID J2Yy4KbilH0n0yLiH2vYVK4rUeCnV9ERzOHOPRqrlfU
+ * - URL format: https://arweave.net/{transactionId}
+ * - Integrated into AddArt.tsx and ProfilePhotoUpload.tsx components
  */
 import Arweave from 'arweave';
 
@@ -117,49 +124,102 @@ export const uploadToArWeave = async (
 
     // Convert file to array buffer
     const arrayBuffer = await file.arrayBuffer();
-    const data = new Uint8Array(arrayBuffer);
+    const fileData = new Uint8Array(arrayBuffer);
 
     // Prepare transaction tags
     const transactionTags = [
-      { name: 'Content-Type', value: file.type },
-      { name: 'File-Name', value: file.name },
+      { name: 'Content-Type', value: file.type || 'application/octet-stream' },
+      { name: 'File-Name', value: file.name || 'untitled' },
       { name: 'File-Size', value: file.size.toString() },
       { name: 'Upload-Client', value: 'CommissionArtUI' },
-      { name: 'Upload-Timestamp', value: Date.now().toString() },
-      ...tags
+      { name: 'Upload-Timestamp', value: Date.now().toString() }
     ];
 
-    console.log('Creating ArWeave transaction with tags:', transactionTags);
+    // Add additional custom tags if provided
+    if (tags && Array.isArray(tags)) {
+      for (const tag of tags) {
+        if (tag && tag.name && tag.value && typeof tag.name === 'string' && typeof tag.value === 'string') {
+          transactionTags.push(tag);
+        }
+      }
+    }
 
-    // Create transaction using arweave-js
-    const transaction = await arweave.createTransaction({
-      data: data
-    });
+    console.log('Creating transaction via ArConnect...');
 
-    // Add tags to the transaction
-    transactionTags.forEach(tag => {
-      transaction.addTag(tag.name, tag.value);
-    });
+    try {
+      // Try ArConnect's createTransaction method first
+      const transaction = await (window as any).arweaveWallet.createTransaction({
+        data: fileData,
+        tags: transactionTags
+      });
 
-    console.log('Transaction created, dispatching via ArConnect...');
+      console.log('Transaction created via ArConnect, dispatching...');
 
-    // Use ArConnect to dispatch the transaction (sign and submit in one step)
-    const response = await (window as any).arweaveWallet.dispatch(transaction);
+      // Dispatch the transaction
+      const response = await (window as any).arweaveWallet.dispatch(transaction);
 
-    console.log('ArWeave transaction dispatched:', response);
+      if (!response || !response.id) {
+        throw new Error('Invalid response from ArWeave dispatch');
+      }
 
-    const transactionId = response.id;
-    const arweaveUrl = `https://arweave.net/${transactionId}`;
+      const transactionId = response.id;
+      const arweaveUrl = `https://arweave.net/${transactionId}`;
 
-    console.log(`File uploaded to ArWeave successfully!`);
-    console.log(`Transaction ID: ${transactionId}`);
-    console.log(`URL: ${arweaveUrl}`);
+      console.log(`File uploaded to ArWeave successfully!`);
+      console.log(`Transaction ID: ${transactionId}`);
+      console.log(`URL: ${arweaveUrl}`);
 
-    return {
-      success: true,
-      transactionId,
-      url: arweaveUrl
-    };
+      return {
+        success: true,
+        transactionId,
+        url: arweaveUrl
+      };
+
+    } catch (arConnectError) {
+      console.log('ArConnect createTransaction failed, trying arweave-js approach...');
+      
+      // Fallback to arweave-js + ArConnect sign approach (recommended method)
+      const transaction = await arweave.createTransaction({
+        data: fileData
+      });
+
+      // Add tags to the transaction one by one
+      for (const tag of transactionTags) {
+        try {
+          transaction.addTag(tag.name, tag.value);
+        } catch (tagError) {
+          console.warn('Failed to add tag:', tag, tagError);
+        }
+      }
+
+      console.log('Transaction created with arweave-js, signing with ArConnect...');
+
+      // Use arweave.transactions.sign() which will automatically use ArConnect
+      // This is the recommended approach from ArConnect docs
+      await arweave.transactions.sign(transaction);
+
+      console.log('Transaction signed, posting to network...');
+
+      // Post the transaction directly to the network
+      const postResponse = await arweave.transactions.post(transaction);
+      
+      if (postResponse.status !== 200) {
+        throw new Error(`Failed to post transaction: ${postResponse.status} ${postResponse.statusText}`);
+      }
+
+      const transactionId = transaction.id;
+      const arweaveUrl = `https://arweave.net/${transactionId}`;
+
+      console.log(`File uploaded to ArWeave successfully via fallback method!`);
+      console.log(`Transaction ID: ${transactionId}`);
+      console.log(`URL: ${arweaveUrl}`);
+
+      return {
+        success: true,
+        transactionId,
+        url: arweaveUrl
+      };
+    }
 
   } catch (error) {
     console.error('ArWeave upload failed:', error);

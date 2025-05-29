@@ -60,6 +60,13 @@ const AddArt: React.FC = () => {
   const [arWeaveUploading, setArWeaveUploading] = useState<boolean>(false);
   const [arWeaveResult, setArWeaveResult] = useState<ArWeaveUploadResult | null>(null);
   const [showArWeaveOption, setShowArWeaveOption] = useState<boolean>(false);
+  const [useDevArWeaveFile, setUseDevArWeaveFile] = useState<boolean>(false);
+
+  // Dev ArWeave file for testing (successful upload example)
+  const DEV_ARWEAVE_FILE = {
+    transactionId: 'J2Yy4KbilH0n0yLiH2vYVK4rUeCnV9ERzOHOPRqrlfU',
+    url: 'https://arweave.net/J2Yy4KbilH0n0yLiH2vYVK4rUeCnV9ERzOHOPRqrlfU'
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -396,6 +403,22 @@ const AddArt: React.FC = () => {
     setUseArWeave(e.target.checked);
     if (!e.target.checked) {
       setArWeaveResult(null);
+      setUseDevArWeaveFile(false);
+    }
+  };
+
+  // Handle dev ArWeave file checkbox change
+  const handleDevArWeaveFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUseDevArWeaveFile(e.target.checked);
+    if (e.target.checked) {
+      // Set the dev file as the ArWeave result
+      setArWeaveResult({
+        success: true,
+        transactionId: DEV_ARWEAVE_FILE.transactionId,
+        url: DEV_ARWEAVE_FILE.url
+      });
+    } else {
+      setArWeaveResult(null);
     }
   };
 
@@ -542,7 +565,19 @@ const AddArt: React.FC = () => {
                 
                 {useArWeave && (
                   <div className="arweave-upload-section">
-                    {!arWeaveResult && !arWeaveUploading && (
+                    <div className="form-group checkbox-group arweave-checkbox" style={{ marginBottom: '12px' }}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={useDevArWeaveFile}
+                          onChange={handleDevArWeaveFileChange}
+                          style={{ transform: 'scale(0.8)' }}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: '#ffc107' }}>Use dev Arweave file (dev only)</span>
+                      </label>
+                    </div>
+
+                    {!useDevArWeaveFile && !arWeaveResult && !arWeaveUploading && (
                       <button
                         type="button"
                         onClick={handleArWeaveUpload}
@@ -564,7 +599,7 @@ const AddArt: React.FC = () => {
                       <div className={`arweave-status ${arWeaveResult.success ? 'success' : 'error'}`}>
                         {arWeaveResult.success ? (
                           <>
-                            <span>✓ Uploaded successfully!</span>
+                            <span>✓ {useDevArWeaveFile ? 'Using dev file' : 'Uploaded successfully'}!</span>
                             <a 
                               href={arWeaveResult.url} 
                               target="_blank" 
