@@ -223,4 +223,84 @@
 .profile-photo-upload-modal .action-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ArWeave styles */
+.profile-photo-upload-modal .arweave-option {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 5px;
+}
+
+.profile-photo-upload-modal .arweave-checkbox {
+  margin-bottom: 8px;
+}
+
+.profile-photo-upload-modal .arweave-checkbox label {
+  color: #ffffffaa;
+  font-size: 0.85rem;
+}
+
+.profile-photo-upload-modal .arweave-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.profile-photo-upload-modal .arweave-upload-button {
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+}
+
+.profile-photo-upload-modal .arweave-upload-button:hover:not(:disabled) {
+  background-color: #e55a2b;
+}
+
+.profile-photo-upload-modal .arweave-upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-photo-upload-modal .arweave-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.profile-photo-upload-modal .arweave-status.uploading {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.profile-photo-upload-modal .arweave-status.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.profile-photo-upload-modal .arweave-status.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.profile-photo-upload-modal .arweave-link {
+  color: #ff6b35;
+  text-decoration: none;
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+.profile-photo-upload-modal .arweave-link:hover {
+  text-decoration: underline;
 } 

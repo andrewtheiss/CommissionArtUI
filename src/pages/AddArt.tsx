@@ -7,6 +7,13 @@ import { ethers } from 'ethers';
 import { getUserProfile, createNewArtPieceAndRegisterProfile } from '../contracts/ProfileHubContract';
 import { getContractAddress } from '../utils/contracts';
 import { createArtPieceOnProfile } from '../contracts/ProfileContract';
+import { 
+  shouldRecommendArWeave, 
+  uploadToArWeave, 
+  checkArWeaveExtension, 
+  openArConnectInstallPage,
+  ArWeaveUploadResult 
+} from '../utils/arweave';
 
 interface ArtFormData {
   title: string;
@@ -47,6 +54,12 @@ const AddArt: React.FC = () => {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [aiGenerated, setAiGenerated] = useState<boolean>(false);
+
+  // ArWeave state
+  const [useArWeave, setUseArWeave] = useState<boolean>(false);
+  const [arWeaveUploading, setArWeaveUploading] = useState<boolean>(false);
+  const [arWeaveResult, setArWeaveResult] = useState<ArWeaveUploadResult | null>(null);
+  const [showArWeaveOption, setShowArWeaveOption] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -98,14 +111,15 @@ const AddArt: React.FC = () => {
       // Get and display original image info
       const info = await getImageInfo(file);
       setOriginalPreview(info.dataUrl);
-      setOriginalInfo({
+      const originalFileInfo = {
         size: info.sizeKB,
         dimensions: info.dimensions,
         format: info.format
-      });
+      };
+      setOriginalInfo(originalFileInfo);
       
-      // Auto-compress the image
-      await compressImageFile(file);
+      // Auto-compress the image, passing the original info
+      await compressImageFile(file, originalFileInfo);
     } catch (err) {
       console.error('Error processing image:', err);
       setError('Failed to process image');
@@ -113,7 +127,7 @@ const AddArt: React.FC = () => {
   };
   
   // Automatically compress the image when a file is selected
-  const compressImageFile = async (file: File) => {
+  const compressImageFile = async (file: File, originalFileInfo?: { size: number; dimensions: { width: number; height: number }; format: string }) => {
     if (!file) return;
     
     setIsCompressing(true);
@@ -138,6 +152,16 @@ const AddArt: React.FC = () => {
         imageData: result.byteArray,
         format: result.format
       }));
+
+      // Check if ArWeave should be recommended using the passed originalFileInfo
+      const currentOriginalInfo = originalFileInfo || originalInfo;
+      if (currentOriginalInfo && shouldRecommendArWeave(currentOriginalInfo.size, result.sizeKB)) {
+        setShowArWeaveOption(true);
+        console.log(`ArWeave recommended: Original ${currentOriginalInfo.size.toFixed(2)}KB vs Compressed ${result.sizeKB.toFixed(2)}KB`);
+      } else {
+        setShowArWeaveOption(false);
+        setUseArWeave(false);
+      }
       
     } catch (err) {
       console.error('Compression failed:', err);
@@ -367,6 +391,57 @@ const AddArt: React.FC = () => {
     setAiGenerated(e.target.checked);
   };
 
+  // Handle ArWeave checkbox change
+  const handleArWeaveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUseArWeave(e.target.checked);
+    if (!e.target.checked) {
+      setArWeaveResult(null);
+    }
+  };
+
+  // Handle ArWeave upload
+  const handleArWeaveUpload = async () => {
+    if (!selectedFile) {
+      setError('No file selected for ArWeave upload');
+      return;
+    }
+
+    setArWeaveUploading(true);
+    setError(null);
+
+    try {
+      const tags = [
+        { name: 'App-Name', value: 'CommissionArtUI' },
+        { name: 'App-Version', value: '1.0' },
+        { name: 'Art-Title', value: formData.title || 'Untitled' },
+        { name: 'Upload-Type', value: 'Original-Asset' }
+      ];
+
+      if (formData.description) {
+        tags.push({ name: 'Art-Description', value: formData.description });
+      }
+
+      const result = await uploadToArWeave(selectedFile, tags);
+      setArWeaveResult(result);
+
+      if (result.success) {
+        console.log('ArWeave upload successful:', result);
+      } else {
+        setError(result.error || 'ArWeave upload failed');
+      }
+    } catch (error) {
+      console.error('Error during ArWeave upload:', error);
+      setError(`ArWeave upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setArWeaveUploading(false);
+    }
+  };
+
+  // Handle ArWeave extension installation
+  const handleInstallArConnect = () => {
+    openArConnectInstallPage();
+  };
+
   return (
     <div className="add-art-page">
       <div className="add-art-container">
@@ -448,6 +523,64 @@ const AddArt: React.FC = () => {
                     {originalInfo ? (100 - (compressedImage.sizeKB / originalInfo.size * 100)).toFixed(1) : 0}%
                   </span>
                 </p>
+              </div>
+            )}
+
+            {showArWeaveOption && compressedImage && !isCompressing && (
+              <div className="arweave-option">
+                <div className="form-group checkbox-group arweave-checkbox">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={useArWeave}
+                      onChange={handleArWeaveChange}
+                      style={{ transform: 'scale(0.8)' }}
+                    />
+                    <span style={{ fontSize: '0.85rem' }}>Upload original filesize via Arweave</span>
+                  </label>
+                </div>
+                
+                {useArWeave && (
+                  <div className="arweave-upload-section">
+                    {!arWeaveResult && !arWeaveUploading && (
+                      <button
+                        type="button"
+                        onClick={handleArWeaveUpload}
+                        className="arweave-upload-button"
+                        disabled={arWeaveUploading}
+                      >
+                        Upload to Arweave
+                      </button>
+                    )}
+                    
+                    {arWeaveUploading && (
+                      <div className="arweave-status uploading">
+                        <div className="spinner-small"></div>
+                        <span>Uploading to Arweave...</span>
+                      </div>
+                    )}
+                    
+                    {arWeaveResult && (
+                      <div className={`arweave-status ${arWeaveResult.success ? 'success' : 'error'}`}>
+                        {arWeaveResult.success ? (
+                          <>
+                            <span>✓ Uploaded successfully!</span>
+                            <a 
+                              href={arWeaveResult.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="arweave-link"
+                            >
+                              View on Arweave
+                            </a>
+                          </>
+                        ) : (
+                          <span>✗ {arWeaveResult.error}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             

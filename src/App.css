@@ -1488,3 +1488,95 @@ h2 {
   box-shadow: 0 0 4px #f44336;
   margin-right: 8px;
 }
+
+/* ArWeave styles for AddArt page */
+.arweave-option {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.arweave-checkbox {
+  margin-bottom: 8px;
+}
+
+.arweave-checkbox label {
+  color: #ffffffaa;
+  font-size: 0.85rem;
+}
+
+.arweave-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.arweave-upload-button {
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+}
+
+.arweave-upload-button:hover:not(:disabled) {
+  background-color: #e55a2b;
+}
+
+.arweave-upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.arweave-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.arweave-status.uploading {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.arweave-status.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+}
+
+.arweave-status.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.arweave-link {
+  color: #ff6b35;
+  text-decoration: none;
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+.arweave-link:hover {
+  text-decoration: underline;
+}
+
+.spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}

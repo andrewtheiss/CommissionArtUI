@@ -1,10 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { compressImage } from '../utils/imageCompression';
+import { compressImage, getImageInfo, CompressionResult } from '../utils/imageCompression';
 import { ethers } from 'ethers';
 import { useBlockchain } from '../contexts/BlockchainContext';
 import { createMinimalProxy } from '../contracts/ArtPieceContract';
 import { getContractAddress } from '../utils/contracts';
 import { loadABI } from '../utils/abi';
+import { 
+  shouldRecommendArWeave, 
+  uploadToArWeave, 
+  checkArWeaveExtension, 
+  openArConnectInstallPage,
+  ArWeaveUploadResult 
+} from '../utils/arweave';
 import './ProfilePhotoUpload.css';
 
 interface ProfilePhotoUploadProps {
@@ -21,7 +28,13 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
   onSuccess 
 }) => {
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
-  const [compressedImage, setCompressedImage] = useState<{ dataUrl: string; data: Uint8Array; format: string } | null>(null);
+  const [originalInfo, setOriginalInfo] = useState<{
+    size: number;
+    dimensions: { width: number; height: number };
+    format: string;
+  } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [compressedImage, setCompressedImage] = useState<{ dataUrl: string; data: Uint8Array; format: string; sizeKB: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -29,6 +42,13 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [proxyAddress, setProxyAddress] = useState<string | null>(null);
+  
+  // ArWeave state
+  const [useArWeave, setUseArWeave] = useState<boolean>(false);
+  const [arWeaveUploading, setArWeaveUploading] = useState<boolean>(false);
+  const [arWeaveResult, setArWeaveResult] = useState<ArWeaveUploadResult | null>(null);
+  const [showArWeaveOption, setShowArWeaveOption] = useState<boolean>(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { network } = useBlockchain();
 
@@ -98,10 +118,18 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
         setError('Image size should be less than 10MB');
         return;
       }
+
+      // Store the selected file for ArWeave upload
+      setSelectedFile(file);
       
-      // Create preview of original image
-      const originalDataUrl = await readFileAsDataURL(file);
-      setOriginalPreview(originalDataUrl);
+      // Get and display original image info
+      const info = await getImageInfo(file);
+      setOriginalPreview(info.dataUrl);
+      setOriginalInfo({
+        size: info.sizeKB,
+        dimensions: info.dimensions,
+        format: info.format
+      });
       
       // Compress the image
       setIsCompressing(true);
@@ -127,8 +155,18 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       setCompressedImage({
         dataUrl: compressionResult.dataUrl,
         data: compressionResult.byteArray,
-        format: compressionResult.format
+        format: compressionResult.format,
+        sizeKB: compressionResult.sizeKB
       });
+
+      // Check if ArWeave should be recommended
+      if (shouldRecommendArWeave(info.sizeKB, compressionResult.sizeKB)) {
+        setShowArWeaveOption(true);
+        console.log(`ArWeave recommended: Original ${info.sizeKB.toFixed(2)}KB vs Compressed ${compressionResult.sizeKB.toFixed(2)}KB`);
+      } else {
+        setShowArWeaveOption(false);
+        setUseArWeave(false);
+      }
       
       console.log(`Image compressed: ${compressionResult.width}x${compressionResult.height}, ${compressionResult.sizeKB.toFixed(2)}KB, format: ${compressionResult.format}`);
       
@@ -138,6 +176,53 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       setError('Failed to process image. Please try another file.');
       setIsCompressing(false);
     }
+  };
+
+  // Handle ArWeave checkbox change
+  const handleArWeaveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUseArWeave(e.target.checked);
+    if (!e.target.checked) {
+      setArWeaveResult(null);
+    }
+  };
+
+  // Handle ArWeave upload
+  const handleArWeaveUpload = async () => {
+    if (!selectedFile) {
+      setError('No file selected for ArWeave upload');
+      return;
+    }
+
+    setArWeaveUploading(true);
+    setError(null);
+
+    try {
+      const tags = [
+        { name: 'App-Name', value: 'CommissionArtUI' },
+        { name: 'App-Version', value: '1.0' },
+        { name: 'Art-Title', value: 'Profile Image' },
+        { name: 'Upload-Type', value: 'Profile-Image-Original' }
+      ];
+
+      const result = await uploadToArWeave(selectedFile, tags);
+      setArWeaveResult(result);
+
+      if (result.success) {
+        console.log('ArWeave upload successful:', result);
+      } else {
+        setError(result.error || 'ArWeave upload failed');
+      }
+    } catch (error) {
+      console.error('Error during ArWeave upload:', error);
+      setError(`ArWeave upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setArWeaveUploading(false);
+    }
+  };
+
+  // Handle ArWeave extension installation
+  const handleInstallArConnect = () => {
+    openArConnectInstallPage();
   };
 
   const handleUpload = async () => {
@@ -359,6 +444,64 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
             <div className="compression-status">
               <div className="spinner"></div>
               <span>Compressing image...</span>
+            </div>
+          )}
+          
+          {showArWeaveOption && compressedImage && !isCompressing && (
+            <div className="arweave-option">
+              <div className="form-group checkbox-group arweave-checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={useArWeave}
+                    onChange={handleArWeaveChange}
+                    style={{ transform: 'scale(0.8)' }}
+                  />
+                  <span style={{ fontSize: '0.85rem' }}>Upload original filesize via Arweave</span>
+                </label>
+              </div>
+              
+              {useArWeave && (
+                <div className="arweave-upload-section">
+                  {!arWeaveResult && !arWeaveUploading && (
+                    <button
+                      type="button"
+                      onClick={handleArWeaveUpload}
+                      className="arweave-upload-button"
+                      disabled={arWeaveUploading}
+                    >
+                      Upload to Arweave
+                    </button>
+                  )}
+                  
+                  {arWeaveUploading && (
+                    <div className="arweave-status uploading">
+                      <div className="spinner-small"></div>
+                      <span>Uploading to Arweave...</span>
+                    </div>
+                  )}
+                  
+                  {arWeaveResult && (
+                    <div className={`arweave-status ${arWeaveResult.success ? 'success' : 'error'}`}>
+                      {arWeaveResult.success ? (
+                        <>
+                          <span>✓ Uploaded successfully!</span>
+                          <a 
+                            href={arWeaveResult.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="arweave-link"
+                          >
+                            View on Arweave
+                          </a>
+                        </>
+                      ) : (
+                        <span>✗ {arWeaveResult.error}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
           
